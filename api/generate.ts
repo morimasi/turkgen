@@ -20,13 +20,15 @@ export default async function handler(req: any, res: any) {
         const params: QuestionGenerationParams = req.body;
         
         const ai = new GoogleGenAI({ apiKey });
-        const prompt = createPrompt(params);
+        
+        const userPrompt = createPrompt(params);
+        // Sistem talimatını ve kullanıcı istemini daha sağlam bir istek için birleştir
+        const fullPrompt = `${systemInstruction}\n\n${userPrompt}`;
 
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
-            contents: prompt,
+            contents: fullPrompt, // Birleştirilmiş prompt'u gönder
             config: {
-                systemInstruction: systemInstruction,
                 responseMimeType: 'application/json',
             }
         });
