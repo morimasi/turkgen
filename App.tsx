@@ -16,6 +16,7 @@ const App: React.FC = () => {
   const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState<boolean>(false);
   const [notification, setNotification] = useState<string | null>(null);
+  const [font, setFont] = useState<'Inter' | 'OpenDyslexic'>('Inter');
 
   const handleGenerateQuestion = useCallback(async (params: QuestionGenerationParams) => {
     setIsLoading(true);
@@ -39,11 +40,17 @@ const App: React.FC = () => {
       setTimeout(() => setNotification(null), 3000); // 3 saniye sonra bildirimi kaldır
   };
 
+  const toggleFont = () => {
+    setFont(prevFont => (prevFont === 'Inter' ? 'OpenDyslexic' : 'Inter'));
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
+    <div className={`min-h-screen bg-gray-50 text-gray-800 ${font === 'OpenDyslexic' ? 'font-opendyslexic' : 'font-inter'}`}>
       <Header
         onShowAbout={() => setIsAboutModalOpen(true)}
         onShowArchive={() => setIsArchiveModalOpen(true)}
+        fontFamily={font}
+        onToggleFont={toggleFont}
       />
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
       <ArchiveModal

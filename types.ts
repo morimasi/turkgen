@@ -39,10 +39,8 @@ export interface Curriculum {
 
 export interface QuestionGenerationParams {
   grade: number;
-  unitNo: number;
-  unitName: string;
-  objectiveCode: string;
-  objectiveText: string;
+  units: { no: number, name: string }[];
+  objectives: { code: string, text: string }[];
   questionType: QuestionType;
   difficulty: Difficulty;
   questionCount: number;

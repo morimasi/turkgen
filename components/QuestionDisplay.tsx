@@ -38,7 +38,7 @@ const PrintSettingsToolbar: React.FC<{ settings: PrintSettings, setSettings: Rea
                 <select 
                     id="fontFamily" 
                     value={settings.fontFamily} 
-                    onChange={(e) => handleSettingChange('fontFamily', e.target.value)}
+                    onChange={(e) => handleSettingChange('fontFamily', e.target.value as 'Inter' | 'OpenDyslexic')}
                     className="border-gray-300 rounded-md shadow-sm text-sm p-1"
                 >
                     <option value="Inter">Normal</option>
@@ -232,7 +232,7 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
   };
 
   const printAreaClasses = [
-    printSettings.fontFamily === 'OpenDyslexic' ? 'font-opendyslexic' : '',
+    printSettings.fontFamily === 'OpenDyslexic' ? 'font-opendyslexic' : 'font-inter',
     printSettings.hideAnswers ? 'answer-hidden' : '',
     printSettings.hideDetails ? 'details-hidden' : '',
     'bg-white', // Ensure white background for PDF

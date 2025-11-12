@@ -7,17 +7,15 @@ if (!process.env.API_KEY) {
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-// Entegre edilen yeni sistem talimatı
 const systemInstruction = `Sen, Türkiye Millî Eğitim Bakanlığı (MEB) müfredatına hakim, deneyimli bir ortaokul Türkçe öğretmeni ve ölçme-değerlendirme uzmanısın. Görevin, 2025 yılı MEB Türkçe Dersi Öğretim Programı'nı temel alarak, akademik titizlik ve pedagojik derinlikle, belirtilen kriterlere uygun, özgün ve nitelikli sorular hazırlamaktır. Ürettiğin sorular, sadece dilbilgisel doğruluğu değil, aynı zamanda öğrencinin eleştirel düşünme, anlama ve yorumlama becerilerini de ölçmelidir. Çıktın, daima istenen JSON formatında, bir dizi (array) içinde olmalı, başka hiçbir metin, açıklama veya markdown içermemelidir.`;
 
-// Entegre edilen yeni prompt oluşturma fonksiyonu
 const createPrompt = (params: QuestionGenerationParams): string => {
   const jsonStructure = {
     sinif: params.grade,
-    unite_adi: params.unitName,
-    unite_no: params.unitNo,
-    kazanim_kodu: params.objectiveCode,
-    kazanim_metni: params.objectiveText,
+    unite_adi: "Sorunun ilgili olduğu ünite adı",
+    unite_no: "Sorunun ilgili olduğu ünite numarası",
+    kazanim_kodu: "Sorunun ilgili olduğu kazanım kodu",
+    kazanim_metni: "Sorunun ilgili olduğu kazanım metni",
     soru_tipi: params.questionType,
     paragraf_metni: "...",
     soru_metni: "...",
@@ -28,20 +26,26 @@ const createPrompt = (params: QuestionGenerationParams): string => {
     seviye: params.difficulty,
     cozum_anahtari: "..."
   };
+  
+  const unitsText = params.units.map(u => `- ${u.no}. Ünite: ${u.name}`).join('\n');
+  const objectivesText = params.objectives.map(o => `- ${o.code} ${o.text}`).join('\n');
+
 
   return `
 Aşağıdaki kriterlere ve kurallara göre ${params.questionCount} adet Türkçe sorusu oluştur ve cevabını yalnızca her bir soru nesnesini içeren tek bir JSON dizisi (array) formatında döndür.
 
 **Kriterler:**
 - Sınıf: ${params.grade}
-- Ünite: "${params.unitName}"
-- Kazanım: "${params.objectiveCode} - ${params.objectiveText}"
+- Kapsamdaki Üniteler:
+${unitsText}
+- Kapsamdaki Kazanımlar:
+${objectivesText}
 - Soru Tipi: "${params.questionType}"
 - Zorluk Seviyesi: "${params.difficulty}"
 ${params.customInstructions ? `- Ek Talimatlar: "${params.customInstructions}"` : ''}
 
 **Kurallar:**
-1.  **JSON Yapısı:** Çıktın, aşağıdaki yapıya uyan soru nesnelerinden oluşan bir JSON dizisi \`[...]\` olmalıdır.
+1.  **JSON Yapısı:** Çıktın, aşağıdaki yapıya uyan soru nesnelerinden oluşan bir JSON dizisi \`[...]\` olmalıdır. Her sorunun ünite ve kazanım bilgilerini, sorunun ait olduğu spesifik ünite/kazanım ile doldur.
     \`\`\`json
     ${JSON.stringify(jsonStructure, null, 2)}
     \`\`\`
@@ -56,10 +60,11 @@ ${params.customInstructions ? `- Ek Talimatlar: "${params.customInstructions}"` 
     -   \`gercek_yasam_baglantisi\`: Kazanımın günlük hayattaki önemini veya kullanımını, bir velinin dahi anlayabileceği netlikte tek bir cümleyle ifade et.
     -   \`cozum_anahtari\`: Bir öğretmenin konuyu özetleyebileceği veya çözüm yolunu gösterebileceği 1-2 cümlelik net bir açıklama olsun.
 6.  **Seviye Açıklaması:** 'seviye' alanını, kazanımın Bloom taksonomisindeki basamağına göre ata:
-    -   'temel': "tanır, bulur, belirtir, sıralar" gibi bilgi ve kavrama düzeyindeki kazanımlar. (Örn: Eş anlamlı kelimeyi bulma)
-    -   'orta': "yorumlar, ana fikri bulur, karşılaştırır, neden-sonuç ilişkisi kurar" gibi uygulama ve analiz düzeyindeki kazanımlar. (Ör: Bir metnin ana fikrini bulma)
-    -   'ileri': "çıkarımda bulunur, metin yazar, değerlendirir, eleştirel bakar" gibi sentez ve değerlendirme düzeyindeki kazanımlar. (Ör: Okuduğu metinden hareketle yeni bir başlık önerme)
+    -   'temel': "tanır, bulur, belirtir, sıralar" gibi bilgi ve kavrama düzeyindeki kazanımlar.
+    -   'orta': "yorumlar, ana fikri bulur, karşılaştırır, neden-sonuç ilişkisi kurar" gibi uygulama ve analiz düzeyindeki kazanımlar.
+    -   'ileri': "çıkarımda bulunur, metin yazar, değerlendirir, eleştirel bakar" gibi sentez ve değerlendirme düzeyindeki kazanımlar.
 7.  **Dil ve Üslup:** Tamamen Türkçe dilbilgisi, imla ve noktalama kurallarına uy. Metinlerde kullanılan özel isimler (Ahmet, Zeynep vb.) çeşitli olsun.
+8.  **Soru Dağılımı:** Toplam ${params.questionCount} adet soruyu, yukarıda listelenen kazanımlar arasında anlamlı ve dengeli bir şekilde dağıtarak oluştur.
 
 Lütfen şimdi istenen sayıda soruyu oluştur.`;
 };
