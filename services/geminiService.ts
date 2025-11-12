@@ -1,12 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import type { Question, QuestionGenerationParams } from '../types';
 
-if (!process.env.API_KEY) {
-  throw new Error("API_KEY environment variable not set");
-}
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 const systemInstruction = `Sen, Türkiye Millî Eğitim Bakanlığı (MEB) müfredatına hakim, deneyimli bir ortaokul Türkçe öğretmeni ve ölçme-değerlendirme uzmanısın. Görevin, 2025 yılı MEB Türkçe Dersi Öğretim Programı'nı temel alarak, akademik titizlik ve pedagojik derinlikle, belirtilen kriterlere uygun, özgün ve nitelikli sorular hazırlamaktır. Ürettiğin sorular, sadece dilbilgisel doğruluğu değil, aynı zamanda öğrencinin eleştirel düşünme, anlama ve yorumlama becerilerini de ölçmelidir. Çıktın, daima istenen JSON formatında, bir dizi (array) içinde olmalı, başka hiçbir metin, açıklama veya markdown içermemelidir.`;
 
 const createPrompt = (params: QuestionGenerationParams): string => {
@@ -71,6 +65,11 @@ Lütfen şimdi istenen sayıda soruyu oluştur.`;
 
 
 export const generateQuestions = async (params: QuestionGenerationParams): Promise<Question[]> => {
+  if (!process.env.API_KEY) {
+    throw new Error("API anahtarı (API_KEY) yapılandırılmamış. Lütfen Vercel proje ayarlarından API_KEY ortam değişkenini ekleyip dağıtımı yeniden başlattığınızdan emin olun.");
+  }
+  
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   const prompt = createPrompt(params);
   
   try {
