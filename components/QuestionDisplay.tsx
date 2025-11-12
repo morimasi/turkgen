@@ -3,63 +3,126 @@ import type { Question, PrintSettings } from '../types';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-
 interface QuestionDisplayProps {
   questions: Question[];
 }
 
-const PrintSettingsToolbar: React.FC<{ settings: PrintSettings, setSettings: React.Dispatch<React.SetStateAction<PrintSettings>>, onSaveToArchive: () => void }> = ({ settings, setSettings, onSaveToArchive }) => {
+
+// --- Yeni ve Geliştirilmiş Ayarlar Araç Çubuğu ---
+interface PrintSettingsToolbarProps {
+    settings: PrintSettings;
+    setSettings: React.Dispatch<React.SetStateAction<PrintSettings>>;
+    onSaveToArchive: () => void;
+    onPrint: () => void;
+    onDownloadPdf: () => void;
+    isPdfProcessing: boolean;
+}
+
+const PrintSettingsToolbar: React.FC<PrintSettingsToolbarProps> = ({ 
+    settings, 
+    setSettings, 
+    onSaveToArchive,
+    onPrint,
+    onDownloadPdf,
+    isPdfProcessing
+}) => {
     
     const handleSettingChange = (key: keyof PrintSettings, value: any) => {
         setSettings(prev => ({ ...prev, [key]: value }));
     };
 
-    const SettingButton: React.FC<{icon: string, label: string, onClick: () => void, isActive?: boolean}> = ({icon, label, onClick, isActive = false}) => (
-        <button onClick={onClick} title={label} className={`flex items-center space-x-2 px-3 py-1.5 text-sm rounded-md transition-colors ${isActive ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>
+    const ToggleButton: React.FC<{
+        label: string;
+        activeLabel: string;
+        icon: string;
+        activeIcon: string;
+        isActive: boolean;
+        onClick: () => void;
+    }> = ({ label, activeLabel, icon, activeIcon, isActive, onClick }) => (
+        <button 
+            onClick={onClick} 
+            title={isActive ? activeLabel : label} 
+            className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors ${
+                isActive 
+                ? 'bg-blue-100 text-blue-700 font-semibold' 
+                : 'bg-white text-slate-600 hover:bg-slate-100'
+            } border border-slate-300 shadow-sm`}
+        >
+            <i className={`fas ${isActive ? activeIcon : icon} fa-fw`}></i>
+            <span className="hidden sm:inline">{isActive ? activeLabel : label}</span>
+        </button>
+    );
+    
+    const ActionButton: React.FC<{
+        label: string;
+        icon: string;
+        onClick: () => void;
+        disabled?: boolean;
+        className?: string;
+    }> = ({ label, icon, onClick, disabled = false, className = ''}) => (
+        <button
+            onClick={onClick}
+            title={label}
+            disabled={disabled}
+            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-wait ${className}`}
+        >
             <i className={`fas ${icon} fa-fw`}></i>
-            <span className="hidden sm:inline">{label}</span>
+            <span className="hidden md:inline">{label}</span>
         </button>
     );
 
     return (
-        <div className="no-print p-3 bg-gray-100 rounded-lg mb-4 flex flex-wrap items-center gap-3 border border-gray-200">
-            <div className="flex items-center space-x-2">
-                <label htmlFor="fontSize" className="text-sm font-medium text-gray-700">Punto:</label>
-                <input
-                    type="number"
-                    id="fontSize"
-                    value={settings.fontSize}
-                    onChange={(e) => handleSettingChange('fontSize', parseInt(e.target.value))}
-                    className="w-16 border-gray-300 rounded-md shadow-sm text-sm p-1"
-                />
+        <div className="no-print p-3 bg-slate-50 border border-slate-200 rounded-lg mb-4 flex flex-wrap items-center justify-between gap-4 shadow-sm">
+            {/* Sol taraf: Biçimlendirme */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                {/* Punto */}
+                <div className="flex items-center">
+                    <label htmlFor="fontSize" className="text-sm font-medium text-slate-600 mr-2">Punto</label>
+                    <input
+                        type="number"
+                        id="fontSize"
+                        value={settings.fontSize}
+                        onChange={(e) => handleSettingChange('fontSize', parseInt(e.target.value))}
+                        className="w-16 border-slate-300 rounded-md shadow-sm text-sm p-1.5 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                </div>
+
+                {/* Yazı Tipi */}
+                <div className="flex items-center">
+                    <label htmlFor="fontFamily" className="text-sm font-medium text-slate-600 mr-2">Yazı Tipi</label>
+                    <select 
+                        id="fontFamily" 
+                        value={settings.fontFamily} 
+                        onChange={(e) => handleSettingChange('fontFamily', e.target.value as 'Inter' | 'Atkinson Hyperlegible')}
+                        className="border-slate-300 rounded-md shadow-sm text-sm p-1.5 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                        <option value="Inter">Normal</option>
+                        <option value="Atkinson Hyperlegible">Disleksi Dostu</option>
+                    </select>
+                </div>
+                
+                {/* Sütun */}
+                <div className="flex items-center">
+                    <label className="text-sm font-medium text-slate-600 mr-2">Sütun</label>
+                    <div className="flex items-center rounded-md shadow-sm border border-slate-300">
+                        <button onClick={() => handleSettingChange('columns', 1)} className={`px-3 py-1 text-sm rounded-l-md transition ${settings.columns === 1 ? 'bg-blue-600 text-white' : 'bg-white hover:bg-slate-100'}`}>1</button>
+                        <button onClick={() => handleSettingChange('columns', 2)} className={`px-3 py-1 text-sm rounded-r-md border-l border-slate-300 transition ${settings.columns === 2 ? 'bg-blue-600 text-white' : 'bg-white hover:bg-slate-100'}`}>2</button>
+                    </div>
+                </div>
+
+                {/* Görünürlük Ayarları */}
+                 <div className="flex items-center gap-2">
+                     <ToggleButton label="Cevapları Gizle" activeLabel="Cevapları Göster" icon="fa-eye-slash" activeIcon="fa-eye" isActive={!settings.hideAnswers} onClick={() => handleSettingChange('hideAnswers', !settings.hideAnswers)} />
+                     <ToggleButton label="Detayları Gizle" activeLabel="Detayları Göster" icon="fa-eye-slash" activeIcon="fa-eye" isActive={!settings.hideDetails} onClick={() => handleSettingChange('hideDetails', !settings.hideDetails)} />
+                     <ToggleButton label="Kenarlık Ekle" activeLabel="Kenarlığı Kaldır" icon="fa-border-none" activeIcon="fa-border-all" isActive={settings.showBorders} onClick={() => handleSettingChange('showBorders', !settings.showBorders)} />
+                 </div>
             </div>
-             <div className="flex items-center space-x-2">
-                <label htmlFor="fontFamily" className="text-sm font-medium text-gray-700">Font:</label>
-                <select 
-                    id="fontFamily" 
-                    value={settings.fontFamily} 
-                    onChange={(e) => handleSettingChange('fontFamily', e.target.value as 'Inter' | 'Atkinson Hyperlegible')}
-                    className="border-gray-300 rounded-md shadow-sm text-sm p-1"
-                >
-                    <option value="Inter">Normal</option>
-                    <option value="Atkinson Hyperlegible">Disleksi Dostu</option>
-                </select>
-            </div>
-             <div className="flex items-center space-x-2">
-                <label className="text-sm font-medium text-gray-700">Sütun:</label>
-                <SettingButton icon="fa-minus" label="1" onClick={() => handleSettingChange('columns', 1)} isActive={settings.columns === 1} />
-                <SettingButton icon="fa-columns" label="2" onClick={() => handleSettingChange('columns', 2)} isActive={settings.columns === 2} />
-            </div>
-            <div className="flex items-center space-x-2">
-                 <SettingButton icon={settings.hideAnswers ? "fa-eye-slash" : "fa-eye"} label="Cevaplar" onClick={() => handleSettingChange('hideAnswers', !settings.hideAnswers)} isActive={!settings.hideAnswers} />
-                 <SettingButton icon={settings.hideDetails ? "fa-eye-slash" : "fa-eye"} label="Detaylar" onClick={() => handleSettingChange('hideDetails', !settings.hideDetails)} isActive={!settings.hideDetails} />
-                 <SettingButton icon="fa-border-all" label="Kenarlık" onClick={() => handleSettingChange('showBorders', !settings.showBorders)} isActive={settings.showBorders} />
-            </div>
-             <div className="flex items-center">
-                 <button onClick={onSaveToArchive} title="Arşive Kaydet" className="flex items-center space-x-2 px-3 py-1.5 text-sm rounded-md transition-colors bg-green-600 text-white hover:bg-green-700">
-                    <i className="fas fa-save fa-fw"></i>
-                    <span className="hidden sm:inline">Arşive Kaydet</span>
-                </button>
+
+            {/* Sağ taraf: Eylemler */}
+            <div className="flex items-center gap-2">
+                <ActionButton label="Arşive Kaydet" icon="fa-save" onClick={onSaveToArchive} className="bg-white text-slate-600 hover:bg-slate-100 border border-slate-300"/>
+                <ActionButton label="Yazdır" icon="fa-print" onClick={onPrint} className="bg-slate-600 text-white hover:bg-slate-700"/>
+                <ActionButton label="PDF İndir" icon={isPdfProcessing ? 'fa-spinner fa-spin' : 'fa-file-pdf'} onClick={onDownloadPdf} disabled={isPdfProcessing} className="bg-blue-600 text-white hover:bg-blue-700"/>
             </div>
         </div>
     );
@@ -190,8 +253,6 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
 
   const handleFeedback = (questionIndex: number, rating: string) => {
     setFeedback(prev => ({ ...prev, [questionIndex]: rating }));
-    // In a real app, you would send this feedback to a server.
-    // console.log(`Feedback for question ${questionIndex}: ${rating}`);
   };
 
   const [printSettings, setPrintSettings] = useState<PrintSettings>({
@@ -285,7 +346,7 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
     printSettings.fontFamily === 'Atkinson Hyperlegible' ? 'font-atkinson-hyperlegible' : 'font-inter',
     printSettings.hideAnswers ? 'answer-hidden' : '',
     printSettings.hideDetails ? 'details-hidden' : '',
-    'bg-white', // Ensure white background for PDF
+    'bg-white', // PDF için beyaz arka planı garantile
   ].join(' ');
   
   const printAreaStyles: React.CSSProperties = {
@@ -296,7 +357,7 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
 
   return (
     <div className="w-full">
-      <div className="no-print mb-4 border-b border-gray-200 flex justify-between items-center">
+      <div className="no-print mb-4 border-b border-gray-200">
         <nav className="-mb-px flex space-x-4" aria-label="Tabs">
           <button
             onClick={() => setActiveTab('preview')}
@@ -311,20 +372,19 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
             JSON
           </button>
         </nav>
-        {activeTab === 'preview' && (
-            <div className="flex items-center space-x-2">
-                 <button onClick={handlePrint} className="text-gray-600 hover:text-blue-600 p-2 rounded-md transition-colors" title="Yazdır"><i className="fas fa-print"></i></button>
-                 <button onClick={handleDownloadPdf} disabled={isProcessingPdf} className="text-gray-600 hover:text-blue-600 p-2 rounded-md transition-colors disabled:opacity-50 disabled:cursor-wait" title="PDF İndir">
-                    {isProcessingPdf ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-file-pdf"></i>}
-                </button>
-            </div>
-        )}
       </div>
 
       <div>
         {activeTab === 'preview' ? (
           <>
-            <PrintSettingsToolbar settings={printSettings} setSettings={setPrintSettings} onSaveToArchive={handleSaveToArchive} />
+            <PrintSettingsToolbar 
+                settings={printSettings} 
+                setSettings={setPrintSettings} 
+                onSaveToArchive={handleSaveToArchive}
+                onPrint={handlePrint}
+                onDownloadPdf={handleDownloadPdf}
+                isPdfProcessing={isProcessingPdf}
+            />
             <div id="print-area" ref={printAreaRef} className={printAreaClasses} style={printAreaStyles}>
               {questions.map((q, index) => (
                   <QuestionPreview 
