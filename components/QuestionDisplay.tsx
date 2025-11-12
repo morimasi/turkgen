@@ -10,42 +10,69 @@ interface QuestionDisplayProps {
 
 const QuestionPreview: React.FC<{ question: Question }> = ({ question }) => {
   return (
-    <div className="border rounded-lg p-4 bg-gray-50 text-left mb-4 break-inside-avoid">
-        <div className="mb-4">
-            <p className="text-sm text-gray-600 font-medium">{question.sinif}. Sınıf &bull; {question.unite_adi}</p>
-            <p className="text-xs text-gray-500">{question.kazanim_kodu} {question.kazanim_metni}</p>
+    <div className="border border-gray-200 rounded-lg p-6 bg-white text-left mb-6 break-inside-avoid shadow-sm">
+        {/* Header */}
+        <div className="mb-4 border-b border-gray-200 pb-3">
+            <p className="text-sm font-semibold text-blue-700">{question.sinif}. Sınıf &bull; {question.unite_adi}</p>
+            <p className="text-xs text-gray-500 mt-1">{question.kazanim_kodu} {question.kazanim_metni}</p>
         </div>
         
+        {/* Paragraph */}
         {question.paragraf_metni && (
-            <p className="mb-4 p-3 bg-white border-l-4 border-blue-200 italic text-gray-700">{question.paragraf_metni}</p>
+            <p className="mb-5 p-4 bg-slate-50 border-l-4 border-slate-300 text-gray-800 leading-relaxed text-base">{question.paragraf_metni}</p>
         )}
         
-        <p className="font-semibold mb-4">{question.soru_metni}</p>
+        {/* Question Text */}
+        <p className="font-bold text-lg text-gray-900 mb-5 leading-snug">{question.soru_metni}</p>
         
+        {/* Multiple Choice Options */}
         {question.soru_tipi === 'coktan_secmeli' && question.secenekler && (
-            <div className="space-y-2">
+            <div className="space-y-3">
                 {Object.entries(question.secenekler).map(([key, value]) => (
-                    <div key={key} className={`p-2 border rounded-md ${key === question.dogru_cevap ? 'bg-green-100 border-green-300' : 'bg-white'}`}>
-                        <span className="font-bold">{key})</span> {value}
+                    <div key={key} className={`flex items-start p-3 border rounded-lg transition-colors text-base
+                        ${key === question.dogru_cevap 
+                            ? 'bg-green-50 border-green-400 text-green-900 font-medium' 
+                            : 'bg-gray-50 border-gray-200 text-gray-800 hover:bg-gray-100 hover:border-gray-300'}`
+                        }
+                    >
+                        <span className="font-bold mr-3">{key})</span> 
+                        <span className="flex-1">{value}</span>
                     </div>
                 ))}
             </div>
         )}
 
+        {/* True/False Answer */}
         {question.soru_tipi === 'dogru_yanlis' && (
-             <p className={`font-bold p-2 border rounded-md ${question.dogru_cevap === 'Doğru' ? 'bg-green-100 border-green-300' : 'bg-red-100 border-red-300'}`}>Doğru Cevap: {question.dogru_cevap}</p>
+             <div className="mt-4">
+                <p className={`font-semibold p-3 border rounded-lg inline-block
+                    ${question.dogru_cevap === 'Doğru' 
+                        ? 'bg-green-50 border-green-400 text-green-900' 
+                        : 'bg-red-50 border-red-400 text-red-900'}`
+                }>
+                    Doğru Cevap: {question.dogru_cevap}
+                </p>
+             </div>
         )}
 
+        {/* Fill in the blank Answer */}
         {question.soru_tipi === 'bosluk_doldurma' && (
-             <p className="font-bold p-2 border rounded-md bg-green-100 border-green-300">Doğru Cevap: {question.dogru_cevap}</p>
+            <div className="mt-4">
+                <p className="font-semibold p-3 border rounded-lg bg-green-50 border-green-400 text-green-900 inline-block">
+                    Doğru Cevap: {question.dogru_cevap}
+                </p>
+            </div>
         )}
 
-        <div className="mt-4 pt-3 border-t">
+        {/* Details section */}
+        <div className="mt-6 pt-4 border-t border-gray-200">
             <details>
-                <summary className="cursor-pointer text-sm font-medium text-blue-600 hover:text-blue-800">Çözüm ve Detaylar</summary>
-                <div className="mt-2 text-sm space-y-2">
-                    <p><strong className="font-semibold">Çözüm:</strong> {question.cozum_anahtari}</p>
-                    <p><strong className="font-semibold">Gerçek Yaşam Bağlantısı:</strong> {question.gercek_yasam_baglantisi}</p>
+                <summary className="cursor-pointer text-sm font-semibold text-gray-600 hover:text-gray-900">
+                    Çözüm ve Pedagojik Detaylar <i className="fas fa-chevron-down fa-xs ml-1"></i>
+                </summary>
+                <div className="mt-3 text-sm space-y-3 p-4 bg-blue-50/50 rounded-md border border-blue-100">
+                    <p><strong className="font-semibold text-gray-800">Çözüm Anahtarı:</strong> <span className="text-gray-700">{question.cozum_anahtari}</span></p>
+                    <p><strong className="font-semibold text-gray-800">Gerçek Yaşam Bağlantısı:</strong> <span className="text-gray-700">{question.gercek_yasam_baglantisi}</span></p>
                 </div>
             </details>
         </div>
