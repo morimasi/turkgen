@@ -2,9 +2,10 @@ import React from 'react';
 
 interface HeaderProps {
   onShowAbout: () => void;
+  onShowArchive: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onShowAbout }) => {
+export const Header: React.FC<HeaderProps> = ({ onShowAbout, onShowArchive }) => {
   return (
     <header className="bg-white shadow-md">
       <div className="container mx-auto px-4 md:px-8 py-4 flex items-center justify-between">
@@ -14,6 +15,14 @@ export const Header: React.FC<HeaderProps> = ({ onShowAbout }) => {
         </div>
         <div className="flex items-center space-x-4">
             <p className="text-sm text-gray-500 hidden md:block">Yapay Zeka Destekli Müfredat Aracı</p>
+            <button 
+                onClick={onShowArchive} 
+                className="text-gray-500 hover:text-blue-600 transition-colors"
+                aria-label="Sınav arşivini aç"
+                title="Sınav arşivini aç"
+            >
+                <i className="fas fa-archive text-2xl"></i>
+            </button>
             <button 
                 onClick={onShowAbout} 
                 className="text-gray-500 hover:text-blue-600 transition-colors"

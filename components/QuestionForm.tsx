@@ -69,7 +69,7 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ onGenerate, isLoadin
       const countMatch = lowerTranscript.match(/(\d+)\s*(tane|adet)/);
       if (countMatch) {
           const count = parseInt(countMatch[1], 10);
-          if (count > 0 && count <= 10) setQuestionCount(count);
+          if (count > 0 && count <= 50) setQuestionCount(count);
       }
       alert("Sesli komut işlendi. Lütfen ünite ve kazanımı manuel olarak seçiniz.");
 
@@ -128,7 +128,7 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ onGenerate, isLoadin
   };
   
   const renderSelect = (id: string, label: string, value: string, onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void, options: {value: string, label: string}[], disabled: boolean = false) => (
-    <div className="mb-4">
+    <div className="mb-3">
       <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
       <select
         id={id}
@@ -144,39 +144,35 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ onGenerate, isLoadin
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {renderSelect('grade-select', 'Sınıf', grade, e => setGrade(e.target.value), Object.keys(MEB_CURRICULUM).map(g => ({value: g, label: `${g}. Sınıf`})))}
-        {renderSelect('type-select', 'Soru Tipi', questionType, e => setQuestionType(e.target.value as QuestionType), [
-          {value: 'coktan_secmeli', label: 'Çoktan Seçmeli'},
-          {value: 'dogru_yanlis', label: 'Doğru / Yanlış'},
-          {value: 'bosluk_doldurma', label: 'Boşluk Doldurma'},
-        ])}
-      </div>
+      {renderSelect('grade-select', 'Sınıf', grade, e => setGrade(e.target.value), Object.keys(MEB_CURRICULUM).map(g => ({value: g, label: `${g}. Sınıf`})))}
       {renderSelect('unit-select', 'Ünite', unitNo, e => setUnitNo(e.target.value), availableUnits.map(u => ({value: u.no.toString(), label: `${u.no}. Ünite: ${u.name}`})), availableUnits.length === 0)}
       {renderSelect('objective-select', 'Kazanım', objectiveCode, e => setObjectiveCode(e.target.value), availableObjectives.map(o => ({value: o.code, label: `${o.code} - ${o.text}`})), availableObjectives.length === 0)}
+      {renderSelect('type-select', 'Soru Tipi', questionType, e => setQuestionType(e.target.value as QuestionType), [
+        {value: 'coktan_secmeli', label: 'Çoktan Seçmeli'},
+        {value: 'dogru_yanlis', label: 'Doğru / Yanlış'},
+        {value: 'bosluk_doldurma', label: 'Boşluk Doldurma'},
+      ])}
+      {renderSelect('difficulty-select', 'Zorluk Seviyesi', difficulty, e => setDifficulty(e.target.value as Difficulty), [
+          {value: 'temel', label: 'Temel'},
+          {value: 'orta', label: 'Orta'},
+          {value: 'ileri', label: 'İleri'},
+      ])}
       
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {renderSelect('difficulty-select', 'Zorluk Seviyesi', difficulty, e => setDifficulty(e.target.value as Difficulty), [
-            {value: 'temel', label: 'Temel'},
-            {value: 'orta', label: 'Orta'},
-            {value: 'ileri', label: 'İleri'},
-        ])}
-         <div>
-            <label htmlFor="question-count" className="block text-sm font-medium text-gray-700 mb-1">Soru Sayısı</label>
-            <input 
-                type="number"
-                id="question-count"
-                value={questionCount}
-                onChange={e => setQuestionCount(Math.max(1, Math.min(10, parseInt(e.target.value, 10)) || 1))}
-                min="1"
-                max="10"
-                disabled={isLoading}
-                className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-100"
-            />
-        </div>
+      <div className="mb-3">
+          <label htmlFor="question-count" className="block text-sm font-medium text-gray-700 mb-1">Soru Sayısı</label>
+          <input 
+              type="number"
+              id="question-count"
+              value={questionCount}
+              onChange={e => setQuestionCount(Math.max(1, Math.min(50, parseInt(e.target.value, 10)) || 1))}
+              min="1"
+              max="50"
+              disabled={isLoading}
+              className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-100"
+          />
       </div>
 
-      <div className="mt-4">
+      <div className="mt-3">
         <label htmlFor="custom-instructions" className="block text-sm font-medium text-gray-700 mb-1">Ek Talimatlar (İsteğe Bağlı)</label>
         <textarea
           id="custom-instructions"

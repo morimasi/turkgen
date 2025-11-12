@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Open+Dyslexic:wght@400;700&display=swap" rel="stylesheet">
   <script type="importmap">
 {
   "imports": {
@@ -24,6 +24,9 @@
 <style>
   body {
     font-family: 'Inter', sans-serif;
+  }
+  .font-opendyslexic {
+    font-family: 'Open Dyslexic', sans-serif;
   }
   @media print {
     body * {
@@ -41,6 +44,38 @@
     .no-print {
       display: none !important;
     }
+    .answer-hidden .correct-answer-indicator {
+        background-color: #f9fafb !important; /* bg-gray-50 */
+        border-color: #e5e7eb !important; /* border-gray-200 */
+        color: #1f2937 !important; /* text-gray-800 */
+        font-weight: 400 !important;
+    }
+    .details-hidden details {
+      display: none;
+    }
+  }
+  .details-hidden details {
+      display: none;
+  }
+  .answer-hidden .correct-answer-indicator {
+      background-color: #f9fafb !important;
+      border-color: #e5e7eb !important;
+      color: #1f2937 !important;
+      font-weight: 400 !important;
+  }
+   .answer-hidden .correct-answer-indicator-text {
+      background-color: #f9fafb !important;
+      border-color: #e5e7eb !important;
+      color: #1f2937 !important;
+  }
+  @keyframes fade-in-out {
+    0% { opacity: 0; transform: translateY(-20px); }
+    15% { opacity: 1; transform: translateY(0); }
+    85% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-20px); }
+  }
+  .animate-fade-in-out {
+      animation: fade-in-out 3s ease-in-out forwards;
   }
 </style>
 </head>

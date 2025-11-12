@@ -48,3 +48,19 @@ export interface QuestionGenerationParams {
   questionCount: number;
   customInstructions: string;
 }
+
+export interface PrintSettings {
+  fontSize: number;
+  fontFamily: 'Inter' | 'OpenDyslexic';
+  columns: 1 | 2;
+  hideAnswers: boolean;
+  hideDetails: boolean;
+  showBorders: boolean;
+}
+
+export interface ArchivedExam {
+    id: string;
+    name: string;
+    date: string;
+    questions: Question[];
+}

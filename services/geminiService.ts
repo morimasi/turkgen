@@ -7,8 +7,10 @@ if (!process.env.API_KEY) {
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-const systemInstruction = `Sen, Türk Dili ve Edebiyatı alanında uzman bir profesörsün. Aynı zamanda Türkiye Millî Eğitim Bakanlığı (MEB) Talim ve Terbiye Kurulu'nda görev almış bir ölçme-değerlendirme duayenisin. Görevin, 2025 yılı MEB Türkçe Dersi Öğretim Programı'nı temel alarak, akademik titizlik ve pedagojik derinlikle, belirtilen kriterlere uygun, özgün ve nitelikli sorular hazırlamaktır. Ürettiğin sorular, sadece dilbilgisel doğruluğu değil, aynı zamanda öğrencinin eleştirel düşünme ve anlama becerilerini de ölçmelidir. Çıktın, yalnızca istenen JSON formatında, bir dizi (array) içinde olmalı, başka hiçbir metin, açıklama veya markdown içermemelidir.`;
+// Entegre edilen yeni sistem talimatı
+const systemInstruction = `Sen, Türkiye Millî Eğitim Bakanlığı (MEB) müfredatına hakim, deneyimli bir ortaokul Türkçe öğretmeni ve ölçme-değerlendirme uzmanısın. Görevin, 2025 yılı MEB Türkçe Dersi Öğretim Programı'nı temel alarak, akademik titizlik ve pedagojik derinlikle, belirtilen kriterlere uygun, özgün ve nitelikli sorular hazırlamaktır. Ürettiğin sorular, sadece dilbilgisel doğruluğu değil, aynı zamanda öğrencinin eleştirel düşünme, anlama ve yorumlama becerilerini de ölçmelidir. Çıktın, daima istenen JSON formatında, bir dizi (array) içinde olmalı, başka hiçbir metin, açıklama veya markdown içermemelidir.`;
 
+// Entegre edilen yeni prompt oluşturma fonksiyonu
 const createPrompt = (params: QuestionGenerationParams): string => {
   const jsonStructure = {
     sinif: params.grade,
@@ -50,10 +52,14 @@ ${params.customInstructions ? `- Ek Talimatlar: "${params.customInstructions}"` 
     -   'dogru_yanlis': 'secenekler' ve 'yanlis_secenek_tipleri' null olmalı. 'soru_metni' bir yargı cümlesi olmalı. 'dogru_cevap' "Doğru" veya "Yanlış" metni olmalıdır.
     -   'bosluk_doldurma': 'secenekler' ve 'yanlis_secenek_tipleri' null olmalı. 'soru_metni' içindeki boşluk '___' ile belirtilmeli. 'dogru_cevap' boşluğa gelecek doğru ifade olmalıdır.
 5.  **Pedagojik Derinlik:**
-    -   \`yanlis_secenek_tipleri\`: Çeldiricilerin mantığını açıklayan kısa ifadeler kullan (Örn: "Zıt anlamlı çeldirici", "Yakın anlamlı çeldirici").
-    -   \`gercek_yasam_baglantisi\`: Kazanımın günlük hayattaki önemini tek cümleyle açıkla.
-    -   \`cozum_anahtari\`: Çözüm yolunu 1-2 cümleyle net bir şekilde anlat.
-    -   \`seviye\`: Kazanımın Bloom taksonomisine göre zorluğunu yansıtmalı ('temel', 'orta', 'ileri').
+    -   \`yanlis_secenek_tipleri\`: Her bir çeldiricinin hangi bilişsel hatayı hedeflediğini veya ne tür bir yanıltmaca olduğunu açıkla (Örn: "Yakın anlamlı çeldirici", "Zıt anlamlı çeldirici").
+    -   \`gercek_yasam_baglantisi\`: Kazanımın günlük hayattaki önemini veya kullanımını, bir velinin dahi anlayabileceği netlikte tek bir cümleyle ifade et.
+    -   \`cozum_anahtari\`: Bir öğretmenin konuyu özetleyebileceği veya çözüm yolunu gösterebileceği 1-2 cümlelik net bir açıklama olsun.
+6.  **Seviye Açıklaması:** 'seviye' alanını, kazanımın Bloom taksonomisindeki basamağına göre ata:
+    -   'temel': "tanır, bulur, belirtir, sıralar" gibi bilgi ve kavrama düzeyindeki kazanımlar. (Örn: Eş anlamlı kelimeyi bulma)
+    -   'orta': "yorumlar, ana fikri bulur, karşılaştırır, neden-sonuç ilişkisi kurar" gibi uygulama ve analiz düzeyindeki kazanımlar. (Ör: Bir metnin ana fikrini bulma)
+    -   'ileri': "çıkarımda bulunur, metin yazar, değerlendirir, eleştirel bakar" gibi sentez ve değerlendirme düzeyindeki kazanımlar. (Ör: Okuduğu metinden hareketle yeni bir başlık önerme)
+7.  **Dil ve Üslup:** Tamamen Türkçe dilbilgisi, imla ve noktalama kurallarına uy. Metinlerde kullanılan özel isimler (Ahmet, Zeynep vb.) çeşitli olsun.
 
 Lütfen şimdi istenen sayıda soruyu oluştur.`;
 };

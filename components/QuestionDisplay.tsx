@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import type { Question } from '../types';
+import type { Question, PrintSettings } from '../types';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -8,9 +8,67 @@ interface QuestionDisplayProps {
   questions: Question[];
 }
 
-const QuestionPreview: React.FC<{ question: Question }> = ({ question }) => {
+const PrintSettingsToolbar: React.FC<{ settings: PrintSettings, setSettings: React.Dispatch<React.SetStateAction<PrintSettings>>, onSaveToArchive: () => void }> = ({ settings, setSettings, onSaveToArchive }) => {
+    
+    const handleSettingChange = (key: keyof PrintSettings, value: any) => {
+        setSettings(prev => ({ ...prev, [key]: value }));
+    };
+
+    const SettingButton: React.FC<{icon: string, label: string, onClick: () => void, isActive?: boolean}> = ({icon, label, onClick, isActive = false}) => (
+        <button onClick={onClick} title={label} className={`flex items-center space-x-2 px-3 py-1.5 text-sm rounded-md transition-colors ${isActive ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}>
+            <i className={`fas ${icon} fa-fw`}></i>
+            <span className="hidden sm:inline">{label}</span>
+        </button>
+    );
+
+    return (
+        <div className="no-print p-3 bg-gray-100 rounded-lg mb-4 flex flex-wrap items-center gap-3 border border-gray-200">
+            <div className="flex items-center space-x-2">
+                <label htmlFor="fontSize" className="text-sm font-medium text-gray-700">Punto:</label>
+                <input
+                    type="number"
+                    id="fontSize"
+                    value={settings.fontSize}
+                    onChange={(e) => handleSettingChange('fontSize', parseInt(e.target.value))}
+                    className="w-16 border-gray-300 rounded-md shadow-sm text-sm p-1"
+                />
+            </div>
+             <div className="flex items-center space-x-2">
+                <label htmlFor="fontFamily" className="text-sm font-medium text-gray-700">Font:</label>
+                <select 
+                    id="fontFamily" 
+                    value={settings.fontFamily} 
+                    onChange={(e) => handleSettingChange('fontFamily', e.target.value)}
+                    className="border-gray-300 rounded-md shadow-sm text-sm p-1"
+                >
+                    <option value="Inter">Normal</option>
+                    <option value="OpenDyslexic">Disleksi Dostu</option>
+                </select>
+            </div>
+             <div className="flex items-center space-x-2">
+                <label className="text-sm font-medium text-gray-700">Sütun:</label>
+                <SettingButton icon="fa-minus" label="1" onClick={() => handleSettingChange('columns', 1)} isActive={settings.columns === 1} />
+                <SettingButton icon="fa-columns" label="2" onClick={() => handleSettingChange('columns', 2)} isActive={settings.columns === 2} />
+            </div>
+            <div className="flex items-center space-x-2">
+                 <SettingButton icon={settings.hideAnswers ? "fa-eye-slash" : "fa-eye"} label="Cevaplar" onClick={() => handleSettingChange('hideAnswers', !settings.hideAnswers)} isActive={!settings.hideAnswers} />
+                 <SettingButton icon={settings.hideDetails ? "fa-eye-slash" : "fa-eye"} label="Detaylar" onClick={() => handleSettingChange('hideDetails', !settings.hideDetails)} isActive={!settings.hideDetails} />
+                 <SettingButton icon="fa-border-all" label="Kenarlık" onClick={() => handleSettingChange('showBorders', !settings.showBorders)} isActive={settings.showBorders} />
+            </div>
+             <div className="flex items-center">
+                 <button onClick={onSaveToArchive} title="Arşive Kaydet" className="flex items-center space-x-2 px-3 py-1.5 text-sm rounded-md transition-colors bg-green-600 text-white hover:bg-green-700">
+                    <i className="fas fa-save fa-fw"></i>
+                    <span className="hidden sm:inline">Arşive Kaydet</span>
+                </button>
+            </div>
+        </div>
+    );
+};
+
+
+const QuestionPreview: React.FC<{ question: Question, settings: PrintSettings }> = ({ question, settings }) => {
   return (
-    <div className="border border-gray-200 rounded-lg p-6 bg-white text-left mb-6 break-inside-avoid shadow-sm">
+    <div className={`bg-white text-left mb-6 break-inside-avoid ${settings.showBorders ? 'border border-gray-200 rounded-lg p-6 shadow-sm' : 'p-2'}`}>
         {/* Header */}
         <div className="mb-4 border-b border-gray-200 pb-3">
             <p className="text-sm font-semibold text-blue-700">{question.sinif}. Sınıf &bull; {question.unite_adi}</p>
@@ -29,7 +87,7 @@ const QuestionPreview: React.FC<{ question: Question }> = ({ question }) => {
         {question.soru_tipi === 'coktan_secmeli' && question.secenekler && (
             <div className="space-y-3">
                 {Object.entries(question.secenekler).map(([key, value]) => (
-                    <div key={key} className={`flex items-start p-3 border rounded-lg transition-colors text-base
+                    <div key={key} className={`flex items-start p-3 border rounded-lg transition-colors text-base correct-answer-indicator
                         ${key === question.dogru_cevap 
                             ? 'bg-green-50 border-green-400 text-green-900 font-medium' 
                             : 'bg-gray-50 border-gray-200 text-gray-800 hover:bg-gray-100 hover:border-gray-300'}`
@@ -45,7 +103,7 @@ const QuestionPreview: React.FC<{ question: Question }> = ({ question }) => {
         {/* True/False Answer */}
         {question.soru_tipi === 'dogru_yanlis' && (
              <div className="mt-4">
-                <p className={`font-semibold p-3 border rounded-lg inline-block
+                <p className={`font-semibold p-3 border rounded-lg inline-block correct-answer-indicator-text
                     ${question.dogru_cevap === 'Doğru' 
                         ? 'bg-green-50 border-green-400 text-green-900' 
                         : 'bg-red-50 border-red-400 text-red-900'}`
@@ -58,7 +116,7 @@ const QuestionPreview: React.FC<{ question: Question }> = ({ question }) => {
         {/* Fill in the blank Answer */}
         {question.soru_tipi === 'bosluk_doldurma' && (
             <div className="mt-4">
-                <p className="font-semibold p-3 border rounded-lg bg-green-50 border-green-400 text-green-900 inline-block">
+                <p className="font-semibold p-3 border rounded-lg bg-green-50 border-green-400 text-green-900 inline-block correct-answer-indicator-text">
                     Doğru Cevap: {question.dogru_cevap}
                 </p>
             </div>
@@ -66,7 +124,7 @@ const QuestionPreview: React.FC<{ question: Question }> = ({ question }) => {
 
         {/* Details section */}
         <div className="mt-6 pt-4 border-t border-gray-200">
-            <details>
+            <details open>
                 <summary className="cursor-pointer text-sm font-semibold text-gray-600 hover:text-gray-900">
                     Çözüm ve Pedagojik Detaylar <i className="fas fa-chevron-down fa-xs ml-1"></i>
                 </summary>
@@ -76,7 +134,6 @@ const QuestionPreview: React.FC<{ question: Question }> = ({ question }) => {
                 </div>
             </details>
         </div>
-
     </div>
   );
 };
@@ -87,6 +144,14 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
   const [copied, setCopied] = useState(false);
   const [isProcessingPdf, setIsProcessingPdf] = useState(false);
   const printAreaRef = useRef<HTMLDivElement>(null);
+  const [printSettings, setPrintSettings] = useState<PrintSettings>({
+      fontSize: 12,
+      fontFamily: 'Inter',
+      columns: 1,
+      hideAnswers: false,
+      hideDetails: false,
+      showBorders: true,
+  });
 
   const jsonString = JSON.stringify(questions, null, 2);
   const jsonlString = questions.map(q => JSON.stringify(q)).join('\n');
@@ -144,7 +209,40 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
         setIsProcessingPdf(false);
     }
   };
+  
+  const handleSaveToArchive = () => {
+    try {
+        const examName = prompt("Bu sınav setine bir ad verin:", `Sınav - ${new Date().toLocaleDateString('tr-TR')}`);
+        if (!examName) return;
 
+        const archive = JSON.parse(localStorage.getItem('turkceSoruArsivi') || '[]');
+        const newExam = {
+            id: `exam-${Date.now()}`,
+            name: examName,
+            date: new Date().toISOString(),
+            questions: questions
+        };
+        archive.push(newExam);
+        localStorage.setItem('turkceSoruArsivi', JSON.stringify(archive));
+        alert(`"${examName}" başarıyla arşive kaydedildi!`);
+    } catch (error) {
+        console.error("Arşive kaydederken hata oluştu:", error);
+        alert("Arşive kaydederken bir hata oluştu. Tarayıcınızda yeterli alan olmayabilir.");
+    }
+  };
+
+  const printAreaClasses = [
+    printSettings.fontFamily === 'OpenDyslexic' ? 'font-opendyslexic' : '',
+    printSettings.hideAnswers ? 'answer-hidden' : '',
+    printSettings.hideDetails ? 'details-hidden' : '',
+    'bg-white', // Ensure white background for PDF
+  ].join(' ');
+  
+  const printAreaStyles: React.CSSProperties = {
+      fontSize: `${printSettings.fontSize}pt`,
+      columnCount: printSettings.columns,
+      columnGap: '20px'
+  };
 
   return (
     <div className="w-full">
@@ -175,11 +273,14 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
 
       <div>
         {activeTab === 'preview' ? (
-          <div id="print-area" ref={printAreaRef}>
-            {questions.map((q, index) => (
-                <QuestionPreview key={index} question={q} />
-            ))}
-          </div>
+          <>
+            <PrintSettingsToolbar settings={printSettings} setSettings={setPrintSettings} onSaveToArchive={handleSaveToArchive} />
+            <div id="print-area" ref={printAreaRef} className={printAreaClasses} style={printAreaStyles}>
+              {questions.map((q, index) => (
+                  <QuestionPreview key={index} question={q} settings={printSettings} />
+              ))}
+            </div>
+          </>
         ) : (
           <div className="relative">
             <button

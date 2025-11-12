@@ -37,6 +37,8 @@ export const MEB_CURRICULUM: Curriculum = {
         no: 4,
         name: "Dil Bilgisi ve Yazım",
         objectives: [
+            { code: "T.4.4.1.", text: "İsimleri türlerine göre ayırt eder (özel, cins)." },
+            { code: "T.4.4.2.", text: "Sıfatları (ön ad) tanır." },
             { code: "T.4.4.7.", text: "Büyük harfleri ve noktalama işaretlerini uygun yerlerde kullanır." },
             { code: "T.4.4.12.", text: "Sayıların yazımını bilir." },
             { code: "T.4.4.13.", text: "'de' ve 'ki' bağlaçlarının yazımını ayırt eder." },
@@ -77,6 +79,7 @@ export const MEB_CURRICULUM: Curriculum = {
           { code: "T.5.3.24.", text: "Metnin konusunu belirler." },
           { code: "T.5.3.25.", text: "Metindeki yardımcı fikirleri belirler." },
           { code: "T.5.3.26.", text: "Metnin yapısını (giriş, gelişme, sonuç) analiz eder." },
+          { code: "T.5.3.30.", text: "Metinle ilgili sorular sorar ve cevaplar." },
         ]
       },
       {
@@ -89,6 +92,15 @@ export const MEB_CURRICULUM: Curriculum = {
           { code: "T.5.4.5.", text: "Ses olaylarını (ünsüz benzeşmesi, ünsüz yumuşaması) fark eder." },
         ]
       },
+      {
+        no: 5,
+        name: "Yazım Kuralları ve Noktalama İşaretleri",
+        objectives: [
+            { code: "T.5.4.10.", text: "Büyük harfleri ve noktalama işaretlerini uygun yerlerde kullanır." },
+            { code: "T.5.4.12.", text: "Kısaltmaların ve kısaltmalara gelen eklerin yazımını bilir." },
+            { code: "T.5.4.13.", text: "Sayıların yazımını bilir." },
+        ]
+      }
     ],
   },
   '6': {
@@ -143,6 +155,7 @@ export const MEB_CURRICULUM: Curriculum = {
             objectives: [
                 { code: "T.7.3.5.", text: "Bağlamdan yararlanarak bilmediği kelime ve kelime gruplarının anlamını tahmin eder." },
                 { code: "T.7.3.6.", text: "Kelimeler arası anlam ilişkilerini kavrar." },
+                { code: "T.7.3.7.", text: "Metindeki söz sanatlarını tespit eder (benzetme, kişileştirme, abartma, konuşturma)."},
             ]
         },
         {
@@ -194,13 +207,14 @@ export const MEB_CURRICULUM: Curriculum = {
         objectives: [
           { code: "T.8.3.5.", text: "Kelime ve kelime gruplarının cümleye kattığı anlamı yorumlar." },
           { code: "T.8.3.6.", text: "Metindeki söz sanatlarını tespit eder." },
+          { code: "T.8.3.2.", text: "Geçiş ve bağlantı ifadelerinin metnin anlamına olan katkısını değerlendirir." },
         ],
       },
       {
         no: 2,
         name: "Cümlede Anlam",
         objectives: [
-          { code: "T.8.3.10.", text: "Cümlenin ifade ettiği anlam özelliklerini (öznel-nesnel) belirler." },
+          { code: "T.8.3.10.", text: "Cümlenin ifade ettiği anlam özelliklerini (öznel-nesnel, kesinlik, olasılık vb.) belirler." },
           { code: "T.8.3.11.", text: "Cümleler arasındaki anlam ilişkilerini kavrar (örtülü anlam)." },
           { code: "T.8.3.12.", text: "Cümleleri doğru bir şekilde birleştirerek yeni cümleler oluşturur." },
           { code: "T.8.3.13.", text: "Cümle yorumlama becerilerini geliştirir." },
@@ -226,6 +240,14 @@ export const MEB_CURRICULUM: Curriculum = {
           { code: "T.8.4.3.", text: "Fiilde çatı özelliklerini tanır." },
           { code: "T.8.4.4.", text: "Cümle türlerini tanır." },
           { code: "T.8.4.15.", text: "Anlatım bozukluklarını belirler." },
+        ]
+      },
+      {
+        no: 5,
+        name: "Yazım Kuralları ve Noktalama İşaretleri",
+        objectives: [
+            { code: "T.8.4.8.", text: "Yazım kurallarını uygular." },
+            { code: "T.8.4.13.", text: "Noktalama işaretlerine dikkat ederek okur yazar." },
         ]
       }
     ],
