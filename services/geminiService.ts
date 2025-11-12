@@ -65,11 +65,14 @@ Lütfen şimdi istenen sayıda soruyu oluştur.`;
 
 
 export const generateQuestions = async (params: QuestionGenerationParams): Promise<Question[]> => {
-  if (!process.env.API_KEY) {
-    throw new Error("API anahtarı (API_KEY) yapılandırılmamış. Lütfen Vercel proje ayarlarından API_KEY ortam değişkenini ekleyip dağıtımı yeniden başlattığınızdan emin olun.");
+  // Tarayıcı ortamlarında "process is not defined" hatasını önlemek için API anahtarına güvenli bir şekilde erişin.
+  const apiKey = (typeof process !== 'undefined' && process.env) ? process.env.API_KEY : undefined;
+
+  if (!apiKey) {
+    throw new Error("API anahtarı (API_KEY) bulunamadı veya erişilemiyor. Önemli Not: Bu uygulamayı Vercel gibi bir platformda yayınladıysanız, bu hata beklenen bir durumdur. Güvenlik nedeniyle, Vercel sunucudaki gizli anahtarları tarayıcıda çalışan koda doğrudan göndermez. Uygulamanın mevcut yapısı Vercel'in standart güvenlik modeliyle uyumlu değildir.");
   }
   
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: apiKey });
   const prompt = createPrompt(params);
   
   try {
