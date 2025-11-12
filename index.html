@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Open+Dyslexic:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
   <script type="importmap">
 {
   "imports": {
@@ -22,14 +22,34 @@
 }
 </script>
 <style>
+  /* Inter Font (from official source) */
+  @font-face {
+    font-family: 'Inter'; font-style: normal; font-weight: 400; font-display: swap;
+    src: url("https://rsms.me/inter/font-files/Inter-Regular.woff2?v=3.19") format("woff2");
+  }
+  @font-face {
+    font-family: 'Inter'; font-style: normal; font-weight: 500; font-display: swap;
+    src: url("https://rsms.me/inter/font-files/Inter-Medium.woff2?v=3.19") format("woff2");
+  }
+  @font-face {
+    font-family: 'Inter'; font-style: normal; font-weight: 600; font-display: swap;
+    src: url("https://rsms.me/inter/font-files/Inter-SemiBold.woff2?v=3.19") format("woff2");
+  }
+  @font-face {
+    font-family: 'Inter'; font-style: normal; font-weight: 700; font-display: swap;
+    src: url("https://rsms.me/inter/font-files/Inter-Bold.woff2?v=3.19") format("woff2");
+  }
+
+  /* Atkinson Hyperlegible is loaded via Google Fonts link */
+
   body {
     font-family: 'Inter', sans-serif;
   }
   .font-inter {
     font-family: 'Inter', sans-serif;
   }
-  .font-opendyslexic {
-    font-family: 'Open Dyslexic', sans-serif;
+  .font-atkinson-hyperlegible {
+    font-family: 'Atkinson Hyperlegible', sans-serif;
   }
   @media print {
     body * {

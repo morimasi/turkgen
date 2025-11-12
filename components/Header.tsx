@@ -3,7 +3,7 @@ import React from 'react';
 interface HeaderProps {
   onShowAbout: () => void;
   onShowArchive: () => void;
-  fontFamily: 'Inter' | 'OpenDyslexic';
+  fontFamily: 'Inter' | 'Atkinson Hyperlegible';
   onToggleFont: () => void;
 }
 
@@ -19,7 +19,7 @@ export const Header: React.FC<HeaderProps> = ({ onShowAbout, onShowArchive, font
             <p className="text-sm text-gray-500 hidden md:block">Yapay Zeka Destekli Müfredat Aracı</p>
             <button 
                 onClick={onToggleFont} 
-                className={`text-gray-500 hover:text-blue-600 transition-colors ${fontFamily === 'OpenDyslexic' ? 'text-blue-600' : ''}`}
+                className={`text-gray-500 hover:text-blue-600 transition-colors ${fontFamily === 'Atkinson Hyperlegible' ? 'text-blue-600' : ''}`}
                 aria-label="Yazı tipini değiştir"
                 title={fontFamily === 'Inter' ? "Disleksi dostu yazı tipine geç" : "Normal yazı tipine geç"}
             >

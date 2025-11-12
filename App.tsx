@@ -16,7 +16,14 @@ const App: React.FC = () => {
   const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState<boolean>(false);
   const [notification, setNotification] = useState<string | null>(null);
-  const [font, setFont] = useState<'Inter' | 'OpenDyslexic'>('Inter');
+  const [font, setFont] = useState<'Inter' | 'Atkinson Hyperlegible'>('Inter');
+
+  useEffect(() => {
+    const newClass = font === 'Atkinson Hyperlegible' ? 'font-atkinson-hyperlegible' : 'font-inter';
+    const oldClass = font === 'Atkinson Hyperlegible' ? 'font-inter' : 'font-atkinson-hyperlegible';
+    document.body.classList.remove(oldClass);
+    document.body.classList.add(newClass);
+  }, [font]);
 
   const handleGenerateQuestion = useCallback(async (params: QuestionGenerationParams) => {
     setIsLoading(true);
@@ -41,11 +48,11 @@ const App: React.FC = () => {
   };
 
   const toggleFont = () => {
-    setFont(prevFont => (prevFont === 'Inter' ? 'OpenDyslexic' : 'Inter'));
+    setFont(prevFont => (prevFont === 'Inter' ? 'Atkinson Hyperlegible' : 'Inter'));
   };
 
   return (
-    <div className={`min-h-screen bg-gray-50 text-gray-800 ${font === 'OpenDyslexic' ? 'font-opendyslexic' : 'font-inter'}`}>
+    <div className="min-h-screen bg-gray-50 text-gray-800">
       <Header
         onShowAbout={() => setIsAboutModalOpen(true)}
         onShowArchive={() => setIsArchiveModalOpen(true)}

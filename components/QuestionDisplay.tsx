@@ -38,11 +38,11 @@ const PrintSettingsToolbar: React.FC<{ settings: PrintSettings, setSettings: Rea
                 <select 
                     id="fontFamily" 
                     value={settings.fontFamily} 
-                    onChange={(e) => handleSettingChange('fontFamily', e.target.value as 'Inter' | 'OpenDyslexic')}
+                    onChange={(e) => handleSettingChange('fontFamily', e.target.value as 'Inter' | 'Atkinson Hyperlegible')}
                     className="border-gray-300 rounded-md shadow-sm text-sm p-1"
                 >
                     <option value="Inter">Normal</option>
-                    <option value="OpenDyslexic">Disleksi Dostu</option>
+                    <option value="Atkinson Hyperlegible">Disleksi Dostu</option>
                 </select>
             </div>
              <div className="flex items-center space-x-2">
@@ -66,7 +66,20 @@ const PrintSettingsToolbar: React.FC<{ settings: PrintSettings, setSettings: Rea
 };
 
 
-const QuestionPreview: React.FC<{ question: Question, settings: PrintSettings }> = ({ question, settings }) => {
+const QuestionPreview: React.FC<{ 
+    question: Question; 
+    settings: PrintSettings; 
+    index: number;
+    onFeedback: (index: number, feedback: string) => void;
+    feedbackStatus?: string;
+}> = ({ question, settings, index, onFeedback, feedbackStatus }) => {
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  
+  const handleFeedbackClick = (feedback: string) => {
+    onFeedback(index, feedback);
+    setIsPopoverOpen(false);
+  };
+
   return (
     <div className={`bg-white text-left mb-6 break-inside-avoid ${settings.showBorders ? 'border border-gray-200 rounded-lg p-6 shadow-sm' : 'p-2'}`}>
         {/* Header */}
@@ -134,6 +147,35 @@ const QuestionPreview: React.FC<{ question: Question, settings: PrintSettings }>
                 </div>
             </details>
         </div>
+        
+        {/* Feedback section */}
+        <div className="no-print mt-4 pt-4 border-t border-gray-200 flex justify-end items-center relative">
+            {feedbackStatus ? (
+                <span className="text-sm font-medium text-green-600"><i className="fas fa-check-circle mr-2"></i>Değerlendirmeniz için teşekkürler!</span>
+            ) : (
+                <div>
+                    <button 
+                        onClick={() => setIsPopoverOpen(!isPopoverOpen)}
+                        className="text-sm text-gray-600 hover:text-blue-600 font-medium py-1 px-3 rounded-md bg-gray-100 hover:bg-gray-200 transition-colors"
+                    >
+                        <i className="fas fa-star mr-2"></i> Soruyu Değerlendir
+                    </button>
+                    {isPopoverOpen && (
+                        <div className="absolute bottom-full right-0 mb-2 w-48 bg-white rounded-lg shadow-xl border z-10">
+                            <button onClick={() => handleFeedbackClick('harika')} className="w-full text-left flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-800">
+                                <i className="fas fa-thumbs-up fa-fw mr-3 text-green-500"></i> Harika
+                            </button>
+                            <button onClick={() => handleFeedbackClick('duzeltilmeli')} className="w-full text-left flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 hover:text-yellow-800">
+                                <i className="fas fa-pencil fa-fw mr-3 text-yellow-500"></i> Düzeltilmeli
+                            </button>
+                            <button onClick={() => handleFeedbackClick('ise_yaramaz')} className="w-full text-left flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-800">
+                                <i className="fas fa-thumbs-down fa-fw mr-3 text-red-500"></i> İşe Yaramaz
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
+        </div>
     </div>
   );
 };
@@ -144,6 +186,14 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
   const [copied, setCopied] = useState(false);
   const [isProcessingPdf, setIsProcessingPdf] = useState(false);
   const printAreaRef = useRef<HTMLDivElement>(null);
+  const [feedback, setFeedback] = useState<{ [key: number]: string }>({});
+
+  const handleFeedback = (questionIndex: number, rating: string) => {
+    setFeedback(prev => ({ ...prev, [questionIndex]: rating }));
+    // In a real app, you would send this feedback to a server.
+    // console.log(`Feedback for question ${questionIndex}: ${rating}`);
+  };
+
   const [printSettings, setPrintSettings] = useState<PrintSettings>({
       fontSize: 12,
       fontFamily: 'Inter',
@@ -232,7 +282,7 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
   };
 
   const printAreaClasses = [
-    printSettings.fontFamily === 'OpenDyslexic' ? 'font-opendyslexic' : 'font-inter',
+    printSettings.fontFamily === 'Atkinson Hyperlegible' ? 'font-atkinson-hyperlegible' : 'font-inter',
     printSettings.hideAnswers ? 'answer-hidden' : '',
     printSettings.hideDetails ? 'details-hidden' : '',
     'bg-white', // Ensure white background for PDF
@@ -277,7 +327,14 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
             <PrintSettingsToolbar settings={printSettings} setSettings={setPrintSettings} onSaveToArchive={handleSaveToArchive} />
             <div id="print-area" ref={printAreaRef} className={printAreaClasses} style={printAreaStyles}>
               {questions.map((q, index) => (
-                  <QuestionPreview key={index} question={q} settings={printSettings} />
+                  <QuestionPreview 
+                    key={index} 
+                    question={q} 
+                    settings={printSettings} 
+                    index={index}
+                    onFeedback={handleFeedback}
+                    feedbackStatus={feedback[index]}
+                  />
               ))}
             </div>
           </>

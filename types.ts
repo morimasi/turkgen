@@ -49,7 +49,7 @@ export interface QuestionGenerationParams {
 
 export interface PrintSettings {
   fontSize: number;
-  fontFamily: 'Inter' | 'OpenDyslexic';
+  fontFamily: 'Inter' | 'Atkinson Hyperlegible';
   columns: 1 | 2;
   hideAnswers: boolean;
   hideDetails: boolean;
