@@ -26,14 +26,12 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ onGenerate, isLoadin
       .flatMap(u => u.objectives);
   }, [availableUnits, selectedUnitNos]);
 
+  // Sınıf değiştiğinde ünite seçimlerini temizle
   useEffect(() => {
-    if (availableUnits.length > 0) {
-      setSelectedUnitNos([availableUnits[0].no.toString()]);
-    } else {
-      setSelectedUnitNos([]);
-    }
-  }, [availableUnits]);
+    setSelectedUnitNos([]);
+  }, [grade]);
   
+  // Ünite seçimi değiştiğinde kazanım seçimlerini temizle
   useEffect(() => {
      setSelectedObjectiveCodes([]);
   }, [selectedUnitNos]);
@@ -75,6 +73,14 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ onGenerate, isLoadin
     );
   };
 
+  const handleSelectAllUnits = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.checked) {
+          setSelectedUnitNos(availableUnits.map(u => u.no.toString()));
+      } else {
+          setSelectedUnitNos([]);
+      }
+  };
+
   const handleSelectAllObjectives = (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.checked) {
           setSelectedObjectiveCodes(derivedObjectives.map(o => o.code));
@@ -98,7 +104,7 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ onGenerate, isLoadin
                       <input
                           type="checkbox"
                           id={`select-all-${title}`}
-                          checked={selectedItems.length === items.length}
+                          checked={items.length > 0 && selectedItems.length === items.length}
                           onChange={onSelectAll}
                           className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
@@ -107,7 +113,7 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ onGenerate, isLoadin
                       </label>
                   </div>
               )}
-              {items.length === 0 && <p className="text-xs text-gray-500 p-2">Seçim yapınız.</p>}
+              {items.length === 0 && <p className="text-xs text-gray-500 p-2">Lütfen önce bir üst seçim yapınız.</p>}
               {items.map(item => (
                   <div key={item.id} className="flex items-center p-2 rounded-md hover:bg-gray-50">
                       <input
@@ -147,6 +153,7 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ onGenerate, isLoadin
           items={availableUnits.map(u => ({ id: u.no.toString(), label: u.name }))}
           selectedItems={selectedUnitNos}
           onSelectItem={handleUnitSelection}
+          onSelectAll={handleSelectAllUnits}
       />
       
       <CheckboxList 
