@@ -83,13 +83,19 @@ const App: React.FC = () => {
         )}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Soru Kriterleri Formu - Sol Panel */}
-            <div className="lg:col-span-1 bg-surface p-6 rounded-xl shadow-md border border-border no-print relative z-10">
+            <div 
+                className="lg:col-span-1 bg-surface p-6 rounded-xl shadow-md border border-border no-print relative z-10 animate-fade-in-slide-up"
+                style={{ animationDelay: '100ms' }}
+            >
                 <h2 className="text-2xl font-bold text-text-primary mb-6 border-b border-border pb-4">Soru Kriterleri</h2>
                 <QuestionForm onGenerate={handleGenerateQuestion} isLoading={isLoading} />
             </div>
             
             {/* Çalışma Sayfası (Soru Görüntüleme) - Sağ Panel */}
-            <div className="lg:col-span-3 bg-worksheet-surface p-6 rounded-xl shadow-md border border-border flex flex-col">
+            <div 
+                className="lg:col-span-3 bg-worksheet-surface p-6 rounded-xl shadow-md border border-border flex flex-col animate-fade-in-slide-up"
+                style={{ animationDelay: '200ms' }}
+            >
                 <h2 className="text-2xl font-bold text-text-primary mb-6 border-b border-border pb-4">Çalışma Sayfası</h2>
                 <div className="flex-grow flex items-center justify-center">
                 {isLoading && <LoadingSpinner />}

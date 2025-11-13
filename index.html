@@ -169,6 +169,7 @@
   }
   .details-hidden details { display: none; }
   
+  /* Bildirim Animasyonu */
   @keyframes fade-in-out {
     0% { opacity: 0; transform: translateY(-20px); }
     15% { opacity: 1; transform: translateY(0); }
@@ -177,7 +178,7 @@
   }
   .animate-fade-in-out { animation: fade-in-out 3s ease-in-out forwards; }
   
-  /* Yükleme Animasyonu Stilleri */
+  /* Yükleme Spinner Animasyonu */
   @keyframes spin-slow {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
@@ -193,11 +194,53 @@
   .animate-fade-in-subtle {
       animation: fade-in-subtle 0.6s ease-out forwards;
   }
+
+  /* --- YENİ ANİMASYONLAR --- */
+  @keyframes fade-in-slide-up {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-fade-in-slide-up {
+      animation: fade-in-slide-up 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  }
+
+  @keyframes fade-in-blur {
+      from { opacity: 0; filter: blur(5px); transform: translateY(10px); }
+      to { opacity: 1; filter: blur(0); transform: translateY(0); }
+  }
+  .animate-fade-in-blur {
+      animation: fade-in-blur 0.4s ease-out forwards;
+      opacity: 0; /* Animasyon başlamadan önce görünmez yap */
+  }
+
+  @keyframes fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+  }
+  .animate-fade-in { animation: fade-in 0.2s ease-out forwards; }
+
+  @keyframes scale-in {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+  }
+  .animate-scale-in { animation: scale-in 0.2s ease-out forwards; }
   
+  /* --- Akordiyon ve Detaylar Stilleri --- */
   details > summary { list-style: none; }
   details > summary::-webkit-details-marker { display: none; }
   
   .rotate-90-on-open[open] > summary svg { transform: rotate(90deg); }
+  
+  /* Akıcı Akordiyon Animasyonu */
+  details .content-wrapper {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 0.3s ease-out;
+      overflow: hidden;
+  }
+  details[open] .content-wrapper {
+      grid-template-rows: 1fr;
+  }
 </style>
 </head>
   <body class="bg-background">

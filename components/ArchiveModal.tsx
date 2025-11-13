@@ -166,8 +166,8 @@ export const ArchiveModal: React.FC<ArchiveModalProps> = ({ isOpen, onClose, onL
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center" onClick={onClose}>
-      <div className="bg-surface rounded-lg shadow-xl p-6 max-w-4xl w-full m-4 flex flex-col" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center animate-fade-in" onClick={onClose}>
+      <div className="bg-surface rounded-lg shadow-xl p-6 max-w-4xl w-full m-4 flex flex-col animate-scale-in" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center border-b border-border pb-3 mb-4">
           <h2 className="text-2xl font-bold text-text-primary">Sınav Kütüphanesi</h2>
           <button onClick={onClose} className="text-text-secondary hover:text-text-primary text-2xl">&times;</button>

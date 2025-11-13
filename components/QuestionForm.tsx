@@ -15,8 +15,10 @@ const AccordionSection: React.FC<{ title: string; children: React.ReactNode; def
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
             </svg>
         </summary>
-        <div className="p-4 bg-surface">
-            {children}
+        <div className="content-wrapper">
+             <div className="p-4 bg-surface">
+                {children}
+            </div>
         </div>
     </details>
 );
@@ -108,7 +110,7 @@ const CurriculumSelector: React.FC<{
             
             {activeUnit && (
                  <div
-                    className="absolute top-0 left-full ml-2 w-96 z-20 transition-opacity duration-200"
+                    className="absolute top-0 left-full ml-2 w-96 z-20 transition-opacity duration-200 animate-fade-in"
                     style={{ minHeight: '100%' }}
                     onMouseEnter={handlePanelMouseEnter}
                 >
@@ -336,7 +338,7 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ onGenerate, isLoadin
         <button 
           type="submit" 
           disabled={isLoading || selectedObjectiveCodes.length === 0}
-          className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-on-primary bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 ring-primary-500 disabled:bg-primary-300 disabled:cursor-not-allowed transition-colors"
+          className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-on-primary bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 ring-primary-500 disabled:bg-primary-300 disabled:cursor-not-allowed transition-all duration-200 ease-in-out transform hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary-600/30"
         >
           {isLoading ? (
             <>

@@ -10,8 +10,8 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center" onClick={onClose}>
-      <div className="bg-surface rounded-lg shadow-xl p-8 max-w-2xl w-full m-4" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center animate-fade-in" onClick={onClose}>
+      <div className="bg-surface rounded-lg shadow-xl p-8 max-w-2xl w-full m-4 animate-scale-in" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center border-b border-border pb-3">
           <h2 className="text-2xl font-bold text-text-primary">Uygulama Hakkında</h2>
           <button onClick={onClose} className="text-text-secondary hover:text-text-primary text-2xl">&times;</button>

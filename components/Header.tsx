@@ -31,6 +31,23 @@ const themes: { name: Theme; label: string; color: string }[] = [
     { name: 'slate', label: 'Gri', color: 'bg-slate-500' },
 ];
 
+const IconButton: React.FC<{
+    onClick: () => void;
+    'aria-label': string;
+    title: string;
+    icon: string;
+    isActive?: boolean;
+}> = ({ onClick, icon, isActive = false, ...props }) => (
+    <button 
+        onClick={onClick}
+        className={`text-text-secondary hover:text-primary-600 transition-all duration-200 ease-in-out transform hover:scale-110 p-2 rounded-full hover:bg-worksheet-surface ${isActive ? 'text-primary-active' : ''}`}
+        {...props}
+    >
+        <i className={`fas ${icon} text-2xl`}></i>
+    </button>
+);
+
+
 const ThemeSwitcher: React.FC<{ currentTheme: Theme; onThemeChange: (theme: Theme) => void }> = ({ currentTheme, onThemeChange }) => {
     const [isOpen, setIsOpen] = useState(false);
     const wrapperRef = useRef<HTMLDivElement>(null);
@@ -47,16 +64,14 @@ const ThemeSwitcher: React.FC<{ currentTheme: Theme; onThemeChange: (theme: Them
     
     return (
         <div className="relative" ref={wrapperRef}>
-            <button
+            <IconButton
                 onClick={() => setIsOpen(!isOpen)}
-                className="text-text-secondary hover:text-primary-600 transition-colors"
                 aria-label="Temayı değiştir"
                 title="Temayı değiştir"
-            >
-                <i className="fas fa-palette text-2xl"></i>
-            </button>
+                icon="fa-palette"
+            />
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-40 bg-surface rounded-lg shadow-xl border border-border z-20">
+                <div className="absolute right-0 mt-2 w-40 bg-surface rounded-lg shadow-xl border border-border z-20 animate-scale-in">
                     <div className="p-2">
                         {themes.map(theme => (
                             <button
@@ -87,34 +102,29 @@ export const Header: React.FC<HeaderProps> = ({ onShowAbout, onShowArchive, font
           <Logo />
           <h1 className="text-2xl font-bold text-text-primary">TurkGen</h1>
         </div>
-        <div className="flex items-center space-x-2 sm:space-x-4">
-            <p className="text-sm text-text-secondary hidden md:block">Yapay Zeka Destekli Türkçe Soru Üretici</p>
+        <div className="flex items-center space-x-1 sm:space-x-2">
+            <p className="text-sm text-text-secondary hidden md:block mr-4">Yapay Zeka Destekli Türkçe Soru Üretici</p>
             <div className="h-6 w-px bg-border hidden md:block"></div>
             <ThemeSwitcher currentTheme={theme} onThemeChange={setTheme} />
-            <button 
-                onClick={onToggleFont} 
-                className={`text-text-secondary hover:text-primary-600 transition-colors ${fontFamily === 'Atkinson Hyperlegible' ? 'text-primary-active' : ''}`}
+             <IconButton
+                onClick={onToggleFont}
                 aria-label="Yazı tipini değiştir"
                 title={fontFamily === 'Inter' ? "Disleksi dostu yazı tipine geç" : "Normal yazı tipine geç"}
-            >
-                <i className="fas fa-font text-2xl"></i>
-            </button>
-            <button 
-                onClick={onShowArchive} 
-                className="text-text-secondary hover:text-primary-600 transition-colors"
+                icon="fa-font"
+                isActive={fontFamily === 'Atkinson Hyperlegible'}
+            />
+            <IconButton
+                onClick={onShowArchive}
                 aria-label="Sınav arşivini aç"
                 title="Sınav arşivini aç"
-            >
-                <i className="fas fa-archive text-2xl"></i>
-            </button>
-            <button 
-                onClick={onShowAbout} 
-                className="text-text-secondary hover:text-primary-600 transition-colors"
+                icon="fa-archive"
+            />
+            <IconButton
+                onClick={onShowAbout}
                 aria-label="Uygulama hakkında bilgi"
                 title="Uygulama hakkında bilgi"
-            >
-                <i className="fas fa-info-circle text-2xl"></i>
-            </button>
+                icon="fa-info-circle"
+            />
         </div>
       </div>
     </header>

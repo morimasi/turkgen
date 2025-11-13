@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import type { Question, PrintSettings } from '../types';
 import jsPDF from 'jspdf';
@@ -171,7 +170,9 @@ const QuestionPreview: React.FC<{
     onGenerateImage: (index: number, question: Question) => void;
     generatedImage?: string;
     isImageLoading?: boolean;
-}> = ({ question, settings, index, onFeedback, feedbackStatus, onGenerateImage, generatedImage, isImageLoading }) => {
+    className?: string;
+    style?: React.CSSProperties;
+}> = ({ question, settings, index, onFeedback, feedbackStatus, onGenerateImage, generatedImage, isImageLoading, className = '', style }) => {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   
   const handleFeedbackClick = (feedback: string) => {
@@ -179,8 +180,10 @@ const QuestionPreview: React.FC<{
     setIsPopoverOpen(false);
   };
 
+  const combinedClasses = `bg-surface text-left mb-6 break-inside-avoid ${settings.showBorders ? 'border border-border rounded-lg p-6 shadow-sm' : 'p-2'} ${className}`;
+
   return (
-    <div className={`bg-surface text-left mb-6 break-inside-avoid ${settings.showBorders ? 'border border-border rounded-lg p-6 shadow-sm' : 'p-2'}`}>
+    <div className={combinedClasses} style={style}>
         
         {/* Image and Paragraph Section */}
         {question.paragraf_metni && (
@@ -296,7 +299,7 @@ const QuestionPreview: React.FC<{
                         <i className="fas fa-star mr-2"></i> Soruyu Değerlendir
                     </button>
                     {isPopoverOpen && (
-                        <div className="absolute bottom-full right-0 mb-2 w-48 bg-surface rounded-lg shadow-xl border z-10">
+                        <div className="absolute bottom-full right-0 mb-2 w-48 bg-surface rounded-lg shadow-xl border z-10 animate-scale-in">
                             <button onClick={() => handleFeedbackClick('harika')} className="w-full text-left flex items-center px-4 py-2 text-sm text-text-primary hover:bg-green-50 hover:text-green-800">
                                 <i className="fas fa-thumbs-up fa-fw mr-3 text-green-500"></i> Harika
                             </button>
@@ -499,6 +502,8 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
                     onGenerateImage={handleGenerateImage}
                     generatedImage={generatedImages[index]}
                     isImageLoading={imageLoadingStates[index]}
+                    className="animate-fade-in-blur"
+                    style={{ animationDelay: `${index * 100}ms` }}
                   />
               ))}
             </div>
