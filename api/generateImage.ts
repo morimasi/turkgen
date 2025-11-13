@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Modality } from "@google/genai";
 import type { ImageOptions } from '../types';
 
 export const config = {
@@ -58,25 +58,26 @@ export default async function handler(req: Request) {
         
         const enhancedPrompt = constructEnhancedPrompt(prompt, options);
 
-        const response = await ai.models.generateImages({
-            model: 'imagen-4.0-generate-001',
-            prompt: enhancedPrompt,
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash-image',
+            contents: {
+                parts: [{ text: enhancedPrompt }],
+            },
             config: {
-              numberOfImages: 1,
-              outputMimeType: 'image/png',
+                responseModalities: [Modality.IMAGE],
             },
         });
 
-        const firstImage = response.generatedImages?.[0];
+        const part = response.candidates?.[0]?.content?.parts?.[0];
 
-        if (firstImage && firstImage.image.imageBytes) {
-            const base64ImageBytes: string = firstImage.image.imageBytes;
+        if (part && part.inlineData) {
+            const base64ImageBytes: string = part.inlineData.data;
             return new Response(JSON.stringify({ image: base64ImageBytes }), {
                 status: 200,
                 headers: { 'Content-Type': 'application/json' },
             });
         } else {
-            console.error("No image data in Imagen response:", JSON.stringify(response, null, 2));
+            console.error("No image data in Gemini response:", JSON.stringify(response, null, 2));
             throw new Error("Yapay zeka modelinden görsel verisi alınamadı.");
         }
 
