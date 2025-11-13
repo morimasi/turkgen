@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { MEB_CURRICULUM } from '../constants';
 import type { QuestionGenerationParams, QuestionType, Difficulty, Unit } from '../types';
 
@@ -30,93 +30,124 @@ const CurriculumSelector: React.FC<{
     onSelectAllUnits: (select: boolean) => void;
 }> = ({ units, selectedUnitNos, selectedObjectiveCodes, onUnitToggle, onObjectiveToggle, onSelectAllUnits }) => {
 
-    const [expandedUnits, setExpandedUnits] = useState<string[]>([]);
-    
-    const handleUnitExpandToggle = (unitNo: string) => {
-        setExpandedUnits(prev => prev.includes(unitNo) ? prev.filter(no => no !== unitNo) : [...prev, unitNo]);
+    const [activeUnitNo, setActiveUnitNo] = useState<string | null>(null);
+    const timeoutRef = useRef<number | null>(null);
+
+    const activeUnit = useMemo(() => {
+        if (!activeUnitNo) return null;
+        return units.find(u => u.no.toString() === activeUnitNo);
+    }, [activeUnitNo, units]);
+
+    const handleMouseEnterUnit = (unitNo: string) => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        setActiveUnitNo(unitNo);
+    };
+
+    const handleMouseLeaveContainer = () => {
+        timeoutRef.current = window.setTimeout(() => {
+            setActiveUnitNo(null);
+        }, 300);
+    };
+
+    const handlePanelMouseEnter = () => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
 
     const handleSelectAllObjectivesForUnit = (unit: Unit, select: boolean) => {
         unit.objectives.forEach(obj => {
-            if (select && !selectedObjectiveCodes.includes(obj.code)) {
+            const isSelected = selectedObjectiveCodes.includes(obj.code);
+            if (select && !isSelected) {
                 onObjectiveToggle(obj.code);
-            } else if (!select && selectedObjectiveCodes.includes(obj.code)) {
+            } else if (!select && isSelected) {
                 onObjectiveToggle(obj.code);
             }
         });
     };
 
     return (
-        <div className="border border-border rounded-lg max-h-80 overflow-y-auto bg-surface">
-            <div className="sticky top-0 bg-slate-50 border-b border-border p-2 z-10">
-                 <div className="flex items-center">
-                    <input
-                        type="checkbox"
-                        id="select-all-units"
-                        checked={units.length > 0 && selectedUnitNos.length === units.length}
-                        onChange={(e) => onSelectAllUnits(e.target.checked)}
-                        className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                    />
-                    <label htmlFor="select-all-units" className="ml-2 block text-sm font-semibold text-text-primary">
-                        Tüm Üniteleri Seç
-                    </label>
+        <div className="relative" onMouseLeave={handleMouseLeaveContainer}>
+            <div className="border border-border rounded-lg max-h-80 overflow-y-auto bg-surface">
+                <div className="sticky top-0 bg-slate-50 border-b border-border p-2 z-10">
+                     <div className="flex items-center">
+                        <input
+                            type="checkbox"
+                            id="select-all-units"
+                            checked={units.length > 0 && selectedUnitNos.length === units.length}
+                            onChange={(e) => onSelectAllUnits(e.target.checked)}
+                            className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                        />
+                        <label htmlFor="select-all-units" className="ml-2 block text-sm font-semibold text-text-primary">
+                            Tüm Üniteleri Seç
+                        </label>
+                    </div>
                 </div>
-            </div>
-            {units.map(unit => {
-                const isUnitSelected = selectedUnitNos.includes(unit.no.toString());
-                const isExpanded = expandedUnits.includes(unit.no.toString());
-                const areAllObjectivesSelected = unit.objectives.every(obj => selectedObjectiveCodes.includes(obj.code));
-                
-                return (
-                    <div key={unit.no} className="border-b border-border last:border-b-0">
-                        <div className="flex items-center p-2 hover:bg-slate-50 cursor-pointer" onClick={() => handleUnitExpandToggle(unit.no.toString())}>
+                {units.map(unit => {
+                    const isUnitSelected = selectedUnitNos.includes(unit.no.toString());
+                    
+                    return (
+                        <div 
+                            key={unit.no} 
+                            className="flex items-center p-2 border-b border-border last:border-b-0 hover:bg-slate-50 cursor-pointer"
+                            onMouseEnter={() => handleMouseEnterUnit(unit.no.toString())}
+                        >
                              <input
                                 type="checkbox"
                                 id={`unit-${unit.no}`}
                                 checked={isUnitSelected}
                                 onChange={() => onUnitToggle(unit.no.toString())}
-                                onClick={(e) => e.stopPropagation()} // Prevent expansion when clicking checkbox
                                 className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                             />
                             <label htmlFor={`unit-${unit.no}`} className="ml-2 flex-grow text-sm font-medium text-text-primary">{unit.name}</label>
-                            <svg className={`w-5 h-5 text-text-secondary transform transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="w-5 h-5 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                             </svg>
                         </div>
-                        {isExpanded && (
-                            <div className="pl-6 pr-2 py-2 bg-slate-50/50">
-                                <div className="flex items-center pb-2 mb-2 border-b border-border">
+                    );
+                })}
+            </div>
+            
+            {activeUnit && (
+                 <div
+                    className="absolute top-0 left-full ml-2 w-96 z-20 transition-opacity duration-200"
+                    style={{ minHeight: '100%' }}
+                    onMouseEnter={handlePanelMouseEnter}
+                >
+                    <div className="bg-surface border border-border rounded-lg shadow-xl max-h-80 overflow-y-auto">
+                        <div className="sticky top-0 bg-slate-50 border-b border-border p-2">
+                            <h4 className="font-semibold text-text-primary text-sm truncate mb-2">{activeUnit.name}</h4>
+                            <div className="flex items-center">
+                                <input
+                                    type="checkbox"
+                                    id={`select-all-obj-${activeUnit.no}`}
+                                    checked={activeUnit.objectives.length > 0 && activeUnit.objectives.every(obj => selectedObjectiveCodes.includes(obj.code))}
+                                    onChange={(e) => handleSelectAllObjectivesForUnit(activeUnit, e.target.checked)}
+                                    className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                />
+                                <label htmlFor={`select-all-obj-${activeUnit.no}`} className="ml-2 block text-xs font-semibold text-text-secondary">
+                                    Tüm Kazanımları Seç
+                                </label>
+                            </div>
+                        </div>
+                        <div className="p-2">
+                             {activeUnit.objectives.map(obj => (
+                                <div key={obj.code} className="flex items-start p-1.5 rounded-md hover:bg-slate-100">
                                     <input
                                         type="checkbox"
-                                        id={`select-all-obj-${unit.no}`}
-                                        checked={unit.objectives.length > 0 && areAllObjectivesSelected}
-                                        onChange={(e) => handleSelectAllObjectivesForUnit(unit, e.target.checked)}
-                                        className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                        id={obj.code}
+                                        value={obj.code}
+                                        checked={selectedObjectiveCodes.includes(obj.code)}
+                                        onChange={() => onObjectiveToggle(obj.code)}
+                                        className="h-4 w-4 mt-1 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                                     />
-                                    <label htmlFor={`select-all-obj-${unit.no}`} className="ml-2 block text-xs font-semibold text-text-secondary">
-                                        Tüm Kazanımları Seç
+                                    <label htmlFor={obj.code} className="ml-2 block text-sm text-text-secondary">
+                                        {obj.code} - {obj.text}
                                     </label>
                                 </div>
-                                {unit.objectives.map(obj => (
-                                    <div key={obj.code} className="flex items-start p-1.5 rounded-md hover:bg-slate-100">
-                                        <input
-                                            type="checkbox"
-                                            id={obj.code}
-                                            value={obj.code}
-                                            checked={selectedObjectiveCodes.includes(obj.code)}
-                                            onChange={() => onObjectiveToggle(obj.code)}
-                                            className="h-4 w-4 mt-1 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                                        />
-                                        <label htmlFor={obj.code} className="ml-2 block text-sm text-text-secondary">
-                                            {obj.code} - {obj.text}
-                                        </label>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                            ))}
+                        </div>
                     </div>
-                );
-            })}
+                </div>
+            )}
         </div>
     );
 };
@@ -188,6 +219,13 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ onGenerate, isLoadin
   
   const handleSelectAllUnits = (select: boolean) => {
       setSelectedUnitNos(select ? availableUnits.map(u => u.no.toString()) : []);
+      // Bütün üniteler seçilince, bütün kazanımları da seç
+      if(select){
+          const allObjectiveCodes = availableUnits.flatMap(u => u.objectives.map(o => o.code));
+          setSelectedObjectiveCodes(allObjectiveCodes);
+      } else {
+          setSelectedObjectiveCodes([]);
+      }
   };
 
   return (
