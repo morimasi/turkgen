@@ -28,7 +28,6 @@ export default async function handler(req: any, res: any) {
             contents: userPrompt,
             config: {
                 systemInstruction: systemInstruction,
-                responseMimeType: 'application/json',
             }
         });
 
