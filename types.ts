@@ -66,6 +66,8 @@ export interface ArchivedExam {
     name: string;
     date: string;
     questions: Question[];
+    // Fix: Add optional 'isSample' property to allow differentiating sample exams.
+    isSample?: boolean;
 }
 
 export type Theme = 'sky' | 'emerald' | 'rose' | 'indigo' | 'slate' | 'coffee';
