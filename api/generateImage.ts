@@ -1,8 +1,9 @@
-
-
-
 import { GoogleGenAI } from "@google/genai";
 import type { ImageOptions } from '../types';
+
+export const config = {
+    runtime: 'edge',
+};
 
 const constructEnhancedPrompt = (basePrompt: string, options: ImageOptions): string => {
     let styleText = '';
@@ -30,22 +31,27 @@ const constructEnhancedPrompt = (basePrompt: string, options: ImageOptions): str
     return `${prefix}aşağıdaki metni anlatan bir görsel oluştur: "${basePrompt}"`;
 }
 
-// Vercel Serverless Function for Node.js runtime
-export default async function handler(req: any, res: any) {
+// Vercel Edge Function
+export default async function handler(req: Request) {
     if (req.method !== 'POST') {
-        res.setHeader('Allow', ['POST']);
-        return res.status(405).end(`Method ${req.method} Not Allowed`);
+        return new Response(`Method ${req.method} Not Allowed`, { status: 405, headers: { 'Allow': 'POST' } });
     }
 
     const apiKey = process.env.API_KEY;
     if (!apiKey) {
-        return res.status(500).json({ error: "API anahtarı sunucuda yapılandırılmamış." });
+        return new Response(JSON.stringify({ error: "API anahtarı sunucuda yapılandırılmamış." }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+        });
     }
 
     try {
-        const { prompt, options } = req.body;
+        const { prompt, options } = await req.json();
         if (!prompt || !options) {
-            return res.status(400).json({ error: "Görsel oluşturmak için bir metin istemi ve seçenekler gereklidir." });
+            return new Response(JSON.stringify({ error: "Görsel oluşturmak için bir metin istemi ve seçenekler gereklidir." }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' },
+            });
         }
         
         const ai = new GoogleGenAI({ apiKey });
@@ -65,7 +71,10 @@ export default async function handler(req: any, res: any) {
 
         if (firstImage && firstImage.image.imageBytes) {
             const base64ImageBytes: string = firstImage.image.imageBytes;
-            return res.status(200).json({ image: base64ImageBytes });
+            return new Response(JSON.stringify({ image: base64ImageBytes }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' },
+            });
         } else {
             console.error("No image data in Imagen response:", JSON.stringify(response, null, 2));
             throw new Error("Yapay zeka modelinden görsel verisi alınamadı.");
@@ -73,6 +82,9 @@ export default async function handler(req: any, res: any) {
 
     } catch (error: any) {
         console.error("Error in /api/generateImage:", error);
-        return res.status(500).json({ error: "Görsel üretilirken sunucu tarafında bir hata oluştu.", details: error.message });
+        return new Response(JSON.stringify({ error: "Görsel üretilirken sunucu tarafında bir hata oluştu.", details: error.message }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' },
+        });
     }
 }
