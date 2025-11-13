@@ -1,7 +1,9 @@
+
 import React, { useState, useRef } from 'react';
 import type { Question, PrintSettings } from '../types';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { generateImage } from '../services/geminiService';
 
 interface QuestionDisplayProps {
   questions: Question[];
@@ -166,7 +168,10 @@ const QuestionPreview: React.FC<{
     index: number;
     onFeedback: (index: number, feedback: string) => void;
     feedbackStatus?: string;
-}> = ({ question, settings, index, onFeedback, feedbackStatus }) => {
+    onGenerateImage: (index: number, question: Question) => void;
+    generatedImage?: string;
+    isImageLoading?: boolean;
+}> = ({ question, settings, index, onFeedback, feedbackStatus, onGenerateImage, generatedImage, isImageLoading }) => {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   
   const handleFeedbackClick = (feedback: string) => {
@@ -176,16 +181,51 @@ const QuestionPreview: React.FC<{
 
   return (
     <div className={`bg-surface text-left mb-6 break-inside-avoid ${settings.showBorders ? 'border border-border rounded-lg p-6 shadow-sm' : 'p-2'}`}>
-        {/* Paragraph */}
+        
+        {/* Image and Paragraph Section */}
         {question.paragraf_metni && (
-            <p className="mb-5 p-4 bg-background border-l-4 border-border text-text-primary leading-relaxed">{question.paragraf_metni}</p>
+            <div className="mb-5">
+                {/* Image Display Area */}
+                {isImageLoading && !generatedImage && (
+                    <div className="p-4 bg-background rounded-lg animate-pulse flex items-center justify-center h-48 border border-border">
+                        <i className="fas fa-image fa-3x text-border"></i>
+                    </div>
+                )}
+                {generatedImage && (
+                    <div className="p-2 bg-background border border-border rounded-lg shadow-sm">
+                        <img 
+                            src={`data:image/png;base64,${generatedImage}`} 
+                            alt={`Soru ${index + 1} için oluşturulan görsel`}
+                            className="w-full h-auto object-contain max-h-80 rounded-md"
+                        />
+                    </div>
+                )}
+                <p className="mt-4 p-4 bg-background border-l-4 border-border text-text-primary leading-relaxed">{question.paragraf_metni}</p>
+            </div>
         )}
         
-        {/* Question Text */}
-        <p className="font-bold text-text-primary mb-5 leading-snug">
-             {settings.showQuestionNumbers && <strong className="mr-2">{index + 1}.</strong>}
-            {question.soru_metni}
-        </p>
+        {/* Question Text and Image Generation Button */}
+        <div className="flex justify-between items-start mb-5">
+            <p className="font-bold text-text-primary leading-snug flex-grow">
+                 {settings.showQuestionNumbers && <strong className="mr-2">{index + 1}.</strong>}
+                {question.soru_metni}
+            </p>
+            {/* We only want the button if there's content to visualize */}
+            {(question.paragraf_metni) && !generatedImage && (
+                <button 
+                    onClick={() => onGenerateImage(index, question)}
+                    disabled={isImageLoading}
+                    className="no-print ml-4 flex-shrink-0 flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md transition-colors shadow-sm bg-surface text-text-secondary hover:bg-worksheet-surface border border-border disabled:opacity-50 disabled:cursor-wait"
+                    title="Soru için görsel oluştur"
+                >
+                    {isImageLoading ? (
+                        <><i className="fas fa-spinner fa-spin fa-fw"></i><span>Oluşturuluyor...</span></>
+                    ) : (
+                        <><i className="fas fa-magic fa-fw"></i><span>Görselleştir</span></>
+                    )}
+                </button>
+            )}
+        </div>
         
         {/* Multiple Choice Options */}
         {question.soru_tipi === 'coktan_secmeli' && question.secenekler && (
@@ -282,10 +322,31 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
   const [isProcessingPdf, setIsProcessingPdf] = useState(false);
   const printAreaRef = useRef<HTMLDivElement>(null);
   const [feedback, setFeedback] = useState<{ [key: number]: string }>({});
+  const [generatedImages, setGeneratedImages] = useState<{ [key: number]: string }>({});
+  const [imageLoadingStates, setImageLoadingStates] = useState<{ [key: number]: boolean }>({});
+
 
   const handleFeedback = (questionIndex: number, rating: string) => {
     setFeedback(prev => ({ ...prev, [questionIndex]: rating }));
   };
+
+  const handleGenerateImage = async (questionIndex: number, question: Question) => {
+    if (imageLoadingStates[questionIndex]) return;
+
+    setImageLoadingStates(prev => ({ ...prev, [questionIndex]: true }));
+    try {
+        const prompt = `Aşağıdaki metni anlatan, çocukların seveceği, renkli ve basit bir çizgi film tarzında illüstrasyon oluştur. Metin: "${question.paragraf_metni || question.soru_metni}"`;
+        
+        const base64Image = await generateImage(prompt);
+        setGeneratedImages(prev => ({ ...prev, [questionIndex]: base64Image }));
+    } catch (error) {
+        console.error("Görsel oluşturulamadı:", error);
+        alert(error instanceof Error ? error.message : "Görsel oluşturulurken bir hata oluştu.");
+    } finally {
+        setImageLoadingStates(prev => ({ ...prev, [questionIndex]: false }));
+    }
+  };
+
 
   const [printSettings, setPrintSettings] = useState<PrintSettings>({
       fontSize: 12,
@@ -435,6 +496,9 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
                     index={index}
                     onFeedback={handleFeedback}
                     feedbackStatus={feedback[index]}
+                    onGenerateImage={handleGenerateImage}
+                    generatedImage={generatedImages[index]}
+                    isImageLoading={imageLoadingStates[index]}
                   />
               ))}
             </div>

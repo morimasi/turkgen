@@ -29,3 +29,33 @@ export const generateQuestions = async (params: QuestionGenerationParams): Promi
     throw new Error("Soru üretilirken bilinmeyen bir ağ hatası oluştu.");
   }
 };
+
+export const generateImage = async (prompt: string): Promise<string> => {
+    try {
+        const response = await fetch('/api/generateImage', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ prompt }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: response.statusText }));
+            throw new Error(`Sunucu hatası: ${errorData.error || 'Bilinmeyen bir hata oluştu.'}`);
+        }
+
+        const data = await response.json();
+        if (!data.image) {
+            throw new Error("API'den geçerli bir görsel verisi alınamadı.");
+        }
+        return data.image;
+
+    } catch (error) {
+        console.error("Görsel üretme hatası:", error);
+        if (error instanceof Error) {
+            throw new Error(`Görsel üretilirken bir ağ hatası oluştu. Lütfen tekrar deneyin.`);
+        }
+        throw new Error("Görsel üretilirken bilinmeyen bir ağ hatası oluştu.");
+    }
+};
