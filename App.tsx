@@ -17,7 +17,7 @@ const App: React.FC = () => {
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState<boolean>(false);
   const [notification, setNotification] = useState<string | null>(null);
   const [font, setFont] = useState<'Inter' | 'Atkinson Hyperlegible'>('Inter');
-  const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('turkGenTheme') as Theme) || 'sky');
+  const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('turkGenTheme') as Theme) || 'coffee');
 
   useEffect(() => {
     const root = document.documentElement;
@@ -89,7 +89,7 @@ const App: React.FC = () => {
             </div>
             
             {/* Çalışma Sayfası (Soru Görüntüleme) - Sağ Panel */}
-            <div className="lg:col-span-3 bg-surface p-6 rounded-xl shadow-md border border-border flex flex-col">
+            <div className="lg:col-span-3 bg-worksheet-surface p-6 rounded-xl shadow-md border border-border flex flex-col">
                 <h2 className="text-2xl font-bold text-text-primary mb-6 border-b border-border pb-4">Çalışma Sayfası</h2>
                 <div className="flex-grow flex items-center justify-center">
                 {isLoading && <LoadingSpinner />}

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr" class="theme-sky">
+<html lang="tr" class="theme-coffee">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -44,6 +44,7 @@
       /* Varsayılan (Slate) Tema Renkleri */
       --color-background: 248 250 252; /* slate-50 */
       --color-surface: 255 255 255; /* white */
+      --color-worksheet-surface: var(--color-surface);
       --color-primary-100: 226 232 240; --color-primary-600: 71 85 105; --color-primary-700: 51 65 85;
       --color-text-primary: 30 41 59; /* slate-800 */
       --color-text-secondary: 71 85 105; /* slate-600 */
@@ -67,10 +68,23 @@
     --color-primary-100: 238 242 255; --color-primary-600: 79 70 229; --color-primary-700: 67 56 202; --color-ring: 99 102 241;
   }
   .theme-slate { /* Varsayılan ile aynı */ }
+  .theme-coffee {
+    --color-background: 253 252 251; /* stone-50 */
+    --color-surface: 255 255 255; /* white */
+    --color-worksheet-surface: 245 245 244; /* stone-100 */
+    --color-primary-100: 254 243 199; /* amber-100 */
+    --color-primary-600: 133 77 14; /* amber-800 */
+    --color-primary-700: 113 63 18; /* amber-900 */
+    --color-text-primary: 68 64 60; /* stone-700 */
+    --color-text-secondary: 120 113 108; /* stone-500 */
+    --color-border: 231 229 228; /* stone-200 */
+    --color-ring: 180 83 9; /* amber-700 */
+  }
 
   /* Tailwind'in bu değişkenleri kullanmasını sağlayan yardımcı sınıflar */
   .bg-background { background-color: rgb(var(--color-background)); }
   .bg-surface { background-color: rgb(var(--color-surface)); }
+  .bg-worksheet-surface { background-color: rgb(var(--color-worksheet-surface)); }
   .bg-primary-100 { background-color: rgb(var(--color-primary-100)); }
   .bg-primary-600 { background-color: rgb(var(--color-primary-600)); }
   .hover\:bg-primary-700:hover { background-color: rgb(var(--color-primary-700)); }

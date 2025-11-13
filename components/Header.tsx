@@ -21,6 +21,7 @@ const Logo: React.FC = () => (
 );
 
 const themes: { name: Theme; label: string; color: string }[] = [
+    { name: 'coffee', label: 'Kahve', color: 'bg-yellow-800' },
     { name: 'sky', label: 'Gökyüzü', color: 'bg-sky-500' },
     { name: 'emerald', label: 'Zümrüt', color: 'bg-emerald-500' },
     { name: 'rose', label: 'Gül', color: 'bg-rose-500' },

@@ -67,4 +67,4 @@ export interface ArchivedExam {
     questions: Question[];
 }
 
-export type Theme = 'sky' | 'emerald' | 'rose' | 'indigo' | 'slate';
+export type Theme = 'sky' | 'emerald' | 'rose' | 'indigo' | 'slate' | 'coffee';
