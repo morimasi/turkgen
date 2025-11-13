@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import type { Question, PrintSettings, ImageOptions } from '../types';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -6,7 +6,6 @@ import { generateImage } from '../services/geminiService';
 
 interface QuestionDisplayProps {
   questions: Question[];
-  onShowVocabulary: () => void;
 }
 
 
@@ -18,8 +17,6 @@ interface PrintSettingsToolbarProps {
     onPrint: () => void;
     onDownloadPdf: () => void;
     isPdfProcessing: boolean;
-    onShowVocabulary: () => void;
-    hasParagraphs: boolean;
 }
 
 const PrintSettingsToolbar: React.FC<PrintSettingsToolbarProps> = ({ 
@@ -28,9 +25,7 @@ const PrintSettingsToolbar: React.FC<PrintSettingsToolbarProps> = ({
     onSaveToArchive,
     onPrint,
     onDownloadPdf,
-    isPdfProcessing,
-    onShowVocabulary,
-    hasParagraphs
+    isPdfProcessing
 }) => {
     
     const handleSettingChange = (key: keyof PrintSettings, value: any) => {
@@ -65,13 +60,12 @@ const PrintSettingsToolbar: React.FC<PrintSettingsToolbarProps> = ({
         onClick: () => void;
         disabled?: boolean;
         className?: string;
-        title?: string;
-    }> = ({ label, icon, onClick, disabled = false, className = '', title = ''}) => (
+    }> = ({ label, icon, onClick, disabled = false, className = ''}) => (
         <button
             onClick={onClick}
-            title={title || label}
+            title={label}
             disabled={disabled}
-            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-wait ${className}`}
         >
             <i className={`fas ${icon} fa-fw`}></i>
             <span className="hidden md:inline">{label}</span>
@@ -94,7 +88,6 @@ const PrintSettingsToolbar: React.FC<PrintSettingsToolbarProps> = ({
                     />
                 </div>
                 <div className="flex items-center gap-2">
-                    <ActionButton label="Kelime Çalışması" icon="fa-book-reader" onClick={onShowVocabulary} disabled={!hasParagraphs} className="bg-surface text-text-secondary hover:bg-worksheet-surface border border-border" title={!hasParagraphs ? "Bu özellik için paragraf içeren sorular gereklidir." : "Paragraflardan Kelime Çalışması Oluştur"}/>
                     <ActionButton label="Arşive Kaydet" icon="fa-save" onClick={onSaveToArchive} className="bg-surface text-text-secondary hover:bg-worksheet-surface border border-border"/>
                     <ActionButton label="Yazdır" icon="fa-print" onClick={onPrint} className="bg-text-secondary text-surface hover:opacity-80"/>
                     <ActionButton label={isPdfProcessing ? 'İşleniyor...' : 'PDF İndir'} icon={isPdfProcessing ? 'fa-spinner fa-spin' : 'fa-file-pdf'} onClick={onDownloadPdf} disabled={isPdfProcessing} className="bg-primary-600 text-on-primary hover:bg-primary-700"/>
@@ -104,7 +97,7 @@ const PrintSettingsToolbar: React.FC<PrintSettingsToolbarProps> = ({
             {/* Alt Satır: Ayarlar ve Görünürlük */}
             <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-3 border-t border-border">
                 {/* Görünürlük Ayarları */}
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-2">
                     <ToggleButton label="Başlık" iconOn="fa-eye" iconOff="fa-eye-slash" isOn={settings.showExamTitle} onClick={() => handleSettingChange('showExamTitle', !settings.showExamTitle)} />
                     <ToggleButton label="Kazanımlar" iconOn="fa-info-circle" iconOff="fa-eye-slash" isOn={settings.showWorksheetHeader} onClick={() => handleSettingChange('showWorksheetHeader', !settings.showWorksheetHeader)} />
                     <ToggleButton label="Soru No" iconOn="fa-list-ol" iconOff="fa-eye-slash" isOn={settings.showQuestionNumbers} onClick={() => handleSettingChange('showQuestionNumbers', !settings.showQuestionNumbers)} />
@@ -115,7 +108,7 @@ const PrintSettingsToolbar: React.FC<PrintSettingsToolbarProps> = ({
                 </div>
                 <div className="h-6 w-px bg-border hidden lg:block"></div>
                  {/* Biçim Ayarları */}
-                <div className="flex items-center gap-x-4 gap-y-3 flex-wrap">
+                <div className="flex items-center gap-x-4">
                     <div className="flex items-center" title="Yazı Tipi Boyutu">
                         <i className="fas fa-text-height text-text-secondary mr-2"></i>
                         <input type="number" id="fontSize" value={settings.fontSize} onChange={(e) => handleSettingChange('fontSize', parseInt(e.target.value))} className="w-16 bg-surface border-border rounded-md shadow-sm text-sm p-1.5"/>
@@ -133,34 +126,6 @@ const PrintSettingsToolbar: React.FC<PrintSettingsToolbarProps> = ({
                             <button onClick={() => handleSettingChange('columns', 1)} className={`px-3 py-1 text-sm rounded-l-md transition ${settings.columns === 1 ? 'bg-primary-600 text-on-primary' : 'bg-surface hover:bg-worksheet-surface'}`}>1</button>
                             <button onClick={() => handleSettingChange('columns', 2)} className={`px-3 py-1 text-sm rounded-r-md border-l border-border transition ${settings.columns === 2 ? 'bg-primary-600 text-on-primary' : 'bg-surface hover:bg-worksheet-surface'}`}>2</button>
                         </div>
-                    </div>
-                    <div className="flex items-center" title="Satır Aralığı">
-                        <i className="fas fa-arrows-alt-v text-text-secondary mr-2"></i>
-                        <input
-                            type="range"
-                            id="lineHeight"
-                            min="1.0"
-                            max="2.5"
-                            step="0.1"
-                            value={settings.lineHeight}
-                            onChange={(e) => handleSettingChange('lineHeight', parseFloat(e.target.value))}
-                            className="w-20 sm:w-24 h-2 bg-worksheet-surface rounded-lg appearance-none cursor-pointer accent-primary-600"
-                        />
-                        <span className="text-xs text-text-secondary ml-2 w-8 text-right">{settings.lineHeight.toFixed(1)}</span>
-                    </div>
-                    <div className="flex items-center" title="Soru Aralığı">
-                        <i className="fas fa-grip-lines text-text-secondary mr-2"></i>
-                        <input
-                            type="range"
-                            id="questionSpacing"
-                            min="2"
-                            max="64"
-                            step="2"
-                            value={settings.questionSpacing}
-                            onChange={(e) => handleSettingChange('questionSpacing', parseInt(e.target.value, 10))}
-                            className="w-20 sm:w-24 h-2 bg-worksheet-surface rounded-lg appearance-none cursor-pointer accent-primary-600"
-                        />
-                        <span className="text-xs text-text-secondary ml-2 w-10 text-right">{settings.questionSpacing}px</span>
                     </div>
                 </div>
             </div>
@@ -207,8 +172,7 @@ const QuestionPreview: React.FC<{
     isImageLoading?: boolean;
     className?: string;
     style?: React.CSSProperties;
-    questionSpacing: number;
-}> = ({ question, settings, index, onFeedback, feedbackStatus, onGenerateImage, generatedImage, isImageLoading, className = '', style, questionSpacing }) => {
+}> = ({ question, settings, index, onFeedback, feedbackStatus, onGenerateImage, generatedImage, isImageLoading, className = '', style }) => {
   const [isFeedbackPopoverOpen, setIsFeedbackPopoverOpen] = useState(false);
   const [isImageOptionsOpen, setIsImageOptionsOpen] = useState(false);
   const [imageOptions, setImageOptions] = useState<ImageOptions>({
@@ -242,15 +206,10 @@ const QuestionPreview: React.FC<{
     setIsImageOptionsOpen(false);
   };
 
-  const combinedClasses = `bg-surface text-left break-inside-avoid ${settings.showBorders ? 'border border-border rounded-lg p-6 shadow-sm' : 'p-2'} ${className}`;
-  
-  const componentStyle: React.CSSProperties = {
-      ...style,
-      marginBottom: `${questionSpacing}px`,
-  };
+  const combinedClasses = `bg-surface text-left mb-6 break-inside-avoid ${settings.showBorders ? 'border border-border rounded-lg p-6 shadow-sm' : 'p-2'} ${className}`;
 
   return (
-    <div className={combinedClasses} style={componentStyle}>
+    <div className={combinedClasses} style={style}>
         
         {/* Image and Paragraph Section */}
         {question.paragraf_metni && (
@@ -427,7 +386,7 @@ const QuestionPreview: React.FC<{
 };
 
 
-export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions, onShowVocabulary }) => {
+export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) => {
   const [activeTab, setActiveTab] = useState<'preview' | 'json'>('preview');
   const [copied, setCopied] = useState(false);
   const [isProcessingPdf, setIsProcessingPdf] = useState(false);
@@ -435,8 +394,6 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions, onS
   const [feedback, setFeedback] = useState<{ [key: number]: string }>({});
   const [generatedImages, setGeneratedImages] = useState<{ [key: number]: string }>({});
   const [imageLoadingStates, setImageLoadingStates] = useState<{ [key: number]: boolean }>({});
-
-  const hasParagraphs = useMemo(() => questions.some(q => q.paragraf_metni), [questions]);
 
 
   const handleFeedback = (questionIndex: number, rating: string) => {
@@ -473,8 +430,6 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions, onS
       showExamTitle: true,
       examTitle: 'Türkçe Dersi Çalışma Kağıdı',
       useWhiteBackground: true,
-      lineHeight: 1.5,
-      questionSpacing: 24,
   });
 
   const jsonString = JSON.stringify(questions, null, 2);
@@ -565,8 +520,7 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions, onS
   const printAreaStyles: React.CSSProperties = {
       fontSize: `${printSettings.fontSize}pt`,
       columnCount: printSettings.columns,
-      columnGap: '20px',
-      lineHeight: printSettings.lineHeight,
+      columnGap: '20px'
   };
 
   return (
@@ -598,8 +552,6 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions, onS
                 onPrint={handlePrint}
                 onDownloadPdf={handleDownloadPdf}
                 isPdfProcessing={isProcessingPdf}
-                onShowVocabulary={onShowVocabulary}
-                hasParagraphs={hasParagraphs}
             />
             <div id="print-area" ref={printAreaRef} className={printAreaClasses} style={printAreaStyles}>
               {printSettings.showExamTitle && printSettings.examTitle && (
@@ -617,7 +569,6 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions, onS
                     onGenerateImage={handleGenerateImage}
                     generatedImage={generatedImages[index]}
                     isImageLoading={imageLoadingStates[index]}
-                    questionSpacing={printSettings.questionSpacing}
                     className="animate-fade-in-blur"
                     style={{ animationDelay: `${index * 100}ms` }}
                   />

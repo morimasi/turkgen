@@ -59,8 +59,6 @@ export interface PrintSettings {
   examTitle: string;
   showWorksheetHeader: boolean;
   useWhiteBackground: boolean;
-  lineHeight: number;
-  questionSpacing: number;
 }
 
 export interface ArchivedExam {
@@ -78,11 +76,4 @@ export interface ImageOptions {
   style: 'cizgi-film' | 'gercekci' | 'suluboya' | 'cizgi-roman';
   palette: 'canli' | 'pastel' | 'siyah-beyaz';
   quality: 'hizli' | 'yuksek-kalite';
-}
-
-export interface VocabularyWord {
-  kelime: string;
-  tanim: string;
-  es_anlam: string;
-  ornek_cumle: string;
 }

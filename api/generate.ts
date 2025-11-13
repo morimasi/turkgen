@@ -1,87 +1,55 @@
+
+
 import { GoogleGenAI } from "@google/genai";
 import type { Question, QuestionGenerationParams } from '../types';
 
-export const config = {
-    runtime: 'edge',
-};
-
-// Vercel Edge Function
-export default async function handler(req: Request) {
+// Vercel Serverless Function for Node.js runtime
+// Note: `req` and `res` are placeholders for Vercel's request/response objects.
+// Using `any` for simplicity as the exact types are not available in this context.
+export default async function handler(req: any, res: any) {
     if (req.method !== 'POST') {
-        return new Response(`Method ${req.method} Not Allowed`, { status: 405, headers: { 'Allow': 'POST' } });
+        res.setHeader('Allow', ['POST']);
+        return res.status(405).end(`Method ${req.method} Not Allowed`);
     }
 
     const apiKey = process.env.API_KEY;
     if (!apiKey) {
-        return new Response(JSON.stringify({ error: "API anahtarı sunucuda yapılandırılmamış." }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+        return res.status(500).json({ error: "API anahtarı sunucuda yapılandırılmamış." });
     }
 
     try {
-        const params: QuestionGenerationParams = await req.json();
+        const params: QuestionGenerationParams = req.body;
+        
         const ai = new GoogleGenAI({ apiKey });
+        
+        const userPrompt = createPrompt(params);
 
-        const stream = new ReadableStream({
-            async start(controller) {
-                const encoder = new TextEncoder();
-
-                let successfulQuestions = 0;
-                const maxAttempts = params.questionCount + 5; // Retries için ek deneme hakkı
-                let attempts = 0;
-
-                // İstenen sayıda BAŞARILI soru üretilene kadar döngüyü sürdür.
-                while (successfulQuestions < params.questionCount && attempts < maxAttempts) {
-                    attempts++;
-                    try {
-                        const prompt = createPrompt(params);
-                        const response = await ai.models.generateContent({
-                            model: 'gemini-2.5-pro',
-                            contents: prompt,
-                            config: {
-                                systemInstruction: systemInstruction,
-                            }
-                        });
-
-                        const jsonString = response.text;
-                        const cleanedJsonString = jsonString.replace(/^```json\s*|```$/g, '').trim();
-
-                        if (cleanedJsonString) {
-                            const parsedData = JSON.parse(cleanedJsonString);
-                            const question: Question = Array.isArray(parsedData) ? parsedData[0] : parsedData;
-                            
-                            // Soru metninin varlığını ve boş olmadığını kontrol et.
-                            if (question && question.soru_metni && question.soru_metni.trim() !== '') {
-                                // Soru geçerliyse, stream'e gönder ve başarılı soru sayısını artır.
-                                controller.enqueue(encoder.encode(JSON.stringify(question) + '\n'));
-                                successfulQuestions++;
-                            } else {
-                                console.warn("Skipping invalid/empty question from AI:", cleanedJsonString);
-                            }
-                        } else {
-                             console.warn("Received empty response from AI for a question.");
-                        }
-
-                    } catch (error) {
-                        // Bir soru üretilirken hata olursa, işlemi durdurma, sadece hatayı logla ve devam et.
-                        console.error(`Error during question generation attempt ${attempts}:`, error);
-                    }
-                }
-                
-                if (successfulQuestions < params.questionCount) {
-                     console.error(`Failed to generate the requested number of questions. Got ${successfulQuestions}, wanted ${params.questionCount}.`);
-                }
-                
-                // Tüm sorular istendikten sonra stream'i kapat.
-                controller.close();
-            },
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-pro',
+            contents: userPrompt,
+            config: {
+                systemInstruction: systemInstruction,
+            }
         });
 
-        return new Response(stream, {
-            headers: { 'Content-Type': 'application/x-ndjson' },
-        });
+        const jsonString = response.text;
+        // The model can sometimes still wrap the JSON in markdown.
+        const cleanedJsonString = jsonString.replace(/^```json\s*|```$/g, '').trim();
+        
+        let questions: Question[] | Question = JSON.parse(cleanedJsonString);
+
+        if (!Array.isArray(questions)) {
+            questions = [questions];
+        }
+        
+        return res.status(200).json(questions);
 
     } catch (error: any) {
-        console.error("Error in /api/generate handler:", error);
-        return new Response(JSON.stringify({ error: "Soru üretilirken sunucu tarafında bir hata oluştu.", details: error.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+        console.error("Error in /api/generate:", error);
+        if (error instanceof SyntaxError) {
+            return res.status(500).json({ error: "Yapay zekadan gelen yanıtın formatı bozuk. Geçerli bir JSON döndürmedi." });
+        }
+        return res.status(500).json({ error: "Soru üretilirken sunucu tarafında bir hata oluştu.", details: error.message });
     }
 }
 
@@ -111,7 +79,7 @@ const createPrompt = (params: QuestionGenerationParams): string => {
 
 
   return `
-Aşağıdaki kriterlere ve kurallara göre 1 adet Türkçe sorusu oluştur ve cevabını yalnızca tek bir soru nesnesi içeren JSON formatında döndür. Yanıtın bir JSON dizisi \`[]\` içinde OLMAMALIDIR. Bu, bir setin parçası olan tek bir sorudur, bu yüzden lütfen önceki yanıtlardan farklı ve özgün olduğundan emin ol.
+Aşağıdaki kriterlere ve kurallara göre ${params.questionCount} adet Türkçe sorusu oluştur ve cevabını yalnızca her bir soru nesnesini içeren tek bir JSON dizisi (array) formatında döndür.
 
 **Kriterler:**
 - Sınıf: ${params.grade}
@@ -124,7 +92,7 @@ ${objectivesText}
 ${params.customInstructions ? `- Ek Talimatlar: "${params.customInstructions}"` : ''}
 
 **Kurallar:**
-1.  **JSON Yapısı:** Çıktın, aşağıdaki yapıya uyan TEK BİR JSON nesnesi olmalıdır.
+1.  **JSON Yapısı:** Çıktın, aşağıdaki yapıya uyan soru nesnelerinden oluşan bir JSON dizisi \`[...]\` olmalıdır. Her sorunun ünite ve kazanım bilgilerini, sorunun ait olduğu spesifik ünite/kazanım ile doldur.
     \`\`\`json
     ${JSON.stringify(jsonStructure, null, 2)}
     \`\`\`
@@ -143,7 +111,7 @@ ${params.customInstructions ? `- Ek Talimatlar: "${params.customInstructions}"` 
     -   'orta': "yorumlar, ana fikri bulur, karşılaştırır, neden-sonuç ilişkisi kurar" gibi uygulama ve analiz düzeyindeki kazanımlar.
     -   'ileri': "çıkarımda bulunur, metin yazar, değerlendirir, eleştirel bakar" gibi sentez ve değerlendirme düzeyindeki kazanımlar.
 7.  **Dil ve Üslup:** Tamamen Türkçe dilbilgisi, imla ve noktalama kurallarına uy. Metinlerde kullanılan özel isimler (Ahmet, Zeynep vb.) çeşitli olsun.
-8.  **Soru Dağılımı:** Bu tek soruyu, yukarıda listelenen kazanımlardan BİR TANESİNİ kullanarak oluştur.
+8.  **Soru Dağılımı:** Toplam ${params.questionCount} adet soruyu, yukarıda listelenen kazanımlar arasında anlamlı ve dengeli bir şekilde dağıtarak oluştur.
 
-Lütfen şimdi istenen tek soruyu oluştur.`;
+Lütfen şimdi istenen sayıda soruyu oluştur.`;
 };

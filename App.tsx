@@ -7,17 +7,14 @@ import { generateQuestions } from './services/geminiService';
 import type { Question, QuestionGenerationParams, Theme } from './types';
 import { AboutModal } from './components/AboutModal';
 import { ArchiveModal } from './components/ArchiveModal';
-import { VocabularyWorksheetModal } from './components/VocabularyWorksheetModal';
 
 
 const App: React.FC = () => {
   const [generatedQuestions, setGeneratedQuestions] = useState<Question[] | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [generationProgress, setGenerationProgress] = useState<string | null>(null);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState<boolean>(false);
-  const [isVocabularyModalOpen, setIsVocabularyModalOpen] = useState<boolean>(false);
   const [notification, setNotification] = useState<string | null>(null);
   const [font, setFont] = useState<'Inter' | 'Atkinson Hyperlegible'>('Inter');
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('turkGenTheme') as Theme) || 'coffee');
@@ -38,30 +35,15 @@ const App: React.FC = () => {
   const handleGenerateQuestion = useCallback(async (params: QuestionGenerationParams) => {
     setIsLoading(true);
     setError(null);
-    setGeneratedQuestions([]);
-    let currentCount = 0;
-    setGenerationProgress(`${currentCount} / ${params.questionCount}`);
-
-    await generateQuestions(
-        params,
-        (question) => { // onQuestion
-            setGeneratedQuestions(prev => {
-                const newQuestions = [...(prev || []), question];
-                currentCount = newQuestions.length;
-                setGenerationProgress(`${currentCount} / ${params.questionCount}`);
-                return newQuestions;
-            });
-        },
-        (err) => { // onError
-            setError(err.message);
-            setIsLoading(false);
-            setGenerationProgress(null);
-        },
-        () => { // onComplete
-            setIsLoading(false);
-            setGenerationProgress(null);
-        }
-    );
+    setGeneratedQuestions(null);
+    try {
+      const questions = await generateQuestions(params);
+      setGeneratedQuestions(questions);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred.');
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
   const handleLoadExamFromArchive = (questions: Question[], examName: string) => {
@@ -92,13 +74,6 @@ const App: React.FC = () => {
         onClose={() => setIsArchiveModalOpen(false)}
         onLoadExam={handleLoadExamFromArchive}
       />
-      {generatedQuestions && generatedQuestions.length > 0 && (
-         <VocabularyWorksheetModal 
-            isOpen={isVocabularyModalOpen} 
-            onClose={() => setIsVocabularyModalOpen(false)} 
-            questions={generatedQuestions}
-         />
-      )}
       <main className="container mx-auto p-4 md:p-8">
         {notification && (
             <div className="fixed top-24 right-8 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in-out">
@@ -122,22 +97,16 @@ const App: React.FC = () => {
                 style={{ animationDelay: '200ms' }}
             >
                 <h2 className="text-2xl font-bold text-text-primary mb-6 border-b border-border pb-4">Çalışma Sayfası</h2>
-                <div className="flex-grow">
-                    {isLoading && (
-                        <div className="mb-4">
-                            <LoadingSpinner progressText={generationProgress} />
-                        </div>
-                    )}
-                    {error && !isLoading && <div className="text-danger-900 bg-danger-50 p-4 rounded-lg w-full text-center">{error}</div>}
-                    
-                    {generatedQuestions && generatedQuestions.length > 0 && <QuestionDisplay questions={generatedQuestions} onShowVocabulary={() => setIsVocabularyModalOpen(true)} />}
-                    
-                    {!isLoading && !error && (!generatedQuestions || generatedQuestions.length === 0) && (
-                        <div className="text-center text-text-secondary h-full flex flex-col items-center justify-center">
-                            <i className="fas fa-file-alt fa-3x mb-4"></i>
-                            <p>Yeni bir çalışma sayfası oluşturmak için soldaki formu doldurun.</p>
-                        </div>
-                    )}
+                <div className="flex-grow flex items-center justify-center">
+                {isLoading && <LoadingSpinner />}
+                {error && <div className="text-danger-900 bg-danger-50 p-4 rounded-lg w-full text-center">{error}</div>}
+                {generatedQuestions && generatedQuestions.length > 0 && <QuestionDisplay questions={generatedQuestions} />}
+                {!isLoading && !error && (!generatedQuestions || generatedQuestions.length === 0) && (
+                    <div className="text-center text-text-secondary">
+                    <i className="fas fa-file-alt fa-3x mb-4"></i>
+                    <p>Yeni bir çalışma sayfası oluşturmak için soldaki formu doldurun.</p>
+                    </div>
+                )}
                 </div>
             </div>
         </div>
