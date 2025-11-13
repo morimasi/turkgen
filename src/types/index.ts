@@ -73,3 +73,9 @@ export interface ArchivedExam {
 }
 
 export type Theme = 'sky' | 'emerald' | 'rose' | 'indigo' | 'slate' | 'coffee';
+
+export type NotificationType = 'success' | 'error';
+export interface NotificationData {
+    message: string;
+    type: NotificationType;
+}

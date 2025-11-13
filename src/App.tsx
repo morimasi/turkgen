@@ -4,9 +4,10 @@ import { QuestionForm } from './components/QuestionForm';
 import { QuestionDisplay } from './components/QuestionDisplay';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { generateQuestions } from './services/geminiService';
-import type { Question, QuestionGenerationParams, Theme } from './types';
+import type { Question, QuestionGenerationParams, Theme, NotificationData } from './types';
 import { AboutModal } from './components/AboutModal';
 import { ArchiveModal } from './components/ArchiveModal';
+import { Notification } from './components/Notification';
 
 
 const App: React.FC = () => {
@@ -15,7 +16,7 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState<boolean>(false);
-  const [notification, setNotification] = useState<string | null>(null);
+  const [notification, setNotification] = useState<NotificationData | null>(null);
   const [font, setFont] = useState<'Inter' | 'Atkinson Hyperlegible'>('Inter');
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('turkGenTheme') as Theme) || 'coffee');
 
@@ -39,8 +40,11 @@ const App: React.FC = () => {
     try {
       const questions = await generateQuestions(params);
       setGeneratedQuestions(questions);
+      setNotification({ message: `${questions.length} adet soru başarıyla oluşturuldu!`, type: 'success' });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred.');
+      const errorMessage = err instanceof Error ? err.message : 'Bilinmeyen bir hata oluştu.';
+      setError(errorMessage);
+      setNotification({ message: errorMessage, type: 'error' });
     } finally {
       setIsLoading(false);
     }
@@ -50,8 +54,7 @@ const App: React.FC = () => {
       setGeneratedQuestions(questions);
       setError(null);
       setIsLoading(false);
-      setNotification(`"${examName}" adlı sınav başarıyla yüklendi.`);
-      setTimeout(() => setNotification(null), 3000); // 3 saniye sonra bildirimi kaldır
+      setNotification({ message: `"${examName}" adlı sınav başarıyla yüklendi.`, type: 'success' });
   };
 
   const toggleFont = () => {
@@ -68,6 +71,7 @@ const App: React.FC = () => {
         theme={theme}
         setTheme={setTheme}
       />
+      <Notification notification={notification} onClose={() => setNotification(null)} />
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
       <ArchiveModal
         isOpen={isArchiveModalOpen}
@@ -75,12 +79,6 @@ const App: React.FC = () => {
         onLoadExam={handleLoadExamFromArchive}
       />
       <main className="container mx-auto p-4 md:p-8">
-        {notification && (
-            <div className="fixed top-24 right-8 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in-out">
-                <i className="fas fa-check-circle mr-2"></i>
-                {notification}
-            </div>
-        )}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Soru Kriterleri Formu - Sol Panel */}
             <div 
@@ -100,7 +98,12 @@ const App: React.FC = () => {
                 <div className="flex-grow flex items-center justify-center">
                 {isLoading && <LoadingSpinner />}
                 {error && <div className="text-danger-900 bg-danger-50 p-4 rounded-lg w-full text-center">{error}</div>}
-                {generatedQuestions && generatedQuestions.length > 0 && <QuestionDisplay questions={generatedQuestions} />}
+                {generatedQuestions && generatedQuestions.length > 0 && (
+                    <QuestionDisplay 
+                        questions={generatedQuestions} 
+                        setNotification={setNotification}
+                    />
+                )}
                 {!isLoading && !error && (!generatedQuestions || generatedQuestions.length === 0) && (
                     <div className="text-center text-text-secondary">
                     <i className="fas fa-file-alt fa-3x mb-4"></i>

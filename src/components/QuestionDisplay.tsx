@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import type { Question, PrintSettings } from '../types';
+import type { Question, PrintSettings, NotificationData } from '../types';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { generateImage } from '../services/geminiService';
 
 interface QuestionDisplayProps {
   questions: Question[];
+  setNotification: (notification: NotificationData | null) => void;
 }
 
 
@@ -276,14 +277,13 @@ const QuestionPreview: React.FC<{
     question: Question; 
     settings: PrintSettings; 
     index: number;
-    onFeedback: (index: number, feedback: string) => void;
-    feedbackStatus?: string;
+    onFeedback: (feedback: string) => void;
     onGenerateImage: (index: number, prompt: string, quality: ImageQuality) => void;
     generatedImage?: string;
     isImageLoading?: boolean;
     className?: string;
     style?: React.CSSProperties;
-}> = ({ question, settings, index, onFeedback, feedbackStatus, onGenerateImage, generatedImage, isImageLoading, className = '', style }) => {
+}> = ({ question, settings, index, onFeedback, onGenerateImage, generatedImage, isImageLoading, className = '', style }) => {
   const [isFeedbackPopoverOpen, setIsFeedbackPopoverOpen] = useState(false);
   const [isImageSettingsOpen, setIsImageSettingsOpen] = useState(false);
   const [imageSettings, setImageSettings] = useState<ImageSettings>({
@@ -295,7 +295,7 @@ const QuestionPreview: React.FC<{
 
   
   const handleFeedbackClick = (feedback: string) => {
-    onFeedback(index, feedback);
+    onFeedback(feedback);
     setIsFeedbackPopoverOpen(false);
   };
   
@@ -441,49 +441,44 @@ const QuestionPreview: React.FC<{
         
         {/* Feedback section */}
         <div className="no-print mt-4 pt-4 border-t border-border flex justify-end items-center relative">
-            {feedbackStatus ? (
-                <span className="text-sm font-medium text-green-600"><i className="fas fa-check-circle mr-2"></i>Değerlendirmeniz için teşekkürler!</span>
-            ) : (
-                <div>
-                    <button 
-                        onClick={() => setIsFeedbackPopoverOpen(!isFeedbackPopoverOpen)}
-                        className="text-sm text-text-secondary hover:text-primary-600 font-medium py-1 px-3 rounded-md bg-worksheet-surface hover:opacity-80 transition-colors"
-                    >
-                        <i className="fas fa-star mr-2"></i> Soruyu Değerlendir
-                    </button>
-                    {isFeedbackPopoverOpen && (
-                        <div className="absolute bottom-full right-0 mb-2 w-48 bg-surface rounded-lg shadow-xl border z-10 animate-scale-in">
-                            <button onClick={() => handleFeedbackClick('harika')} className="w-full text-left flex items-center px-4 py-2 text-sm text-text-primary hover:bg-green-50 hover:text-green-800">
-                                <i className="fas fa-thumbs-up fa-fw mr-3 text-green-500"></i> Harika
-                            </button>
-                            <button onClick={() => handleFeedbackClick('duzeltilmeli')} className="w-full text-left flex items-center px-4 py-2 text-sm text-text-primary hover:bg-yellow-50 hover:text-yellow-800">
-                                <i className="fas fa-pencil fa-fw mr-3 text-yellow-500"></i> Düzeltilmeli
-                            </button>
-                            <button onClick={() => handleFeedbackClick('ise_yaramaz')} className="w-full text-left flex items-center px-4 py-2 text-sm text-text-primary hover:bg-red-50 hover:text-red-800">
-                                <i className="fas fa-thumbs-down fa-fw mr-3 text-red-500"></i> İşe Yaramaz
-                            </button>
-                        </div>
-                    )}
-                </div>
-            )}
+            <div>
+                <button 
+                    onClick={() => setIsFeedbackPopoverOpen(!isFeedbackPopoverOpen)}
+                    className="text-sm text-text-secondary hover:text-primary-600 font-medium py-1 px-3 rounded-md bg-worksheet-surface hover:opacity-80 transition-colors"
+                >
+                    <i className="fas fa-star mr-2"></i> Soruyu Değerlendir
+                </button>
+                {isFeedbackPopoverOpen && (
+                    <div className="absolute bottom-full right-0 mb-2 w-48 bg-surface rounded-lg shadow-xl border z-10 animate-scale-in">
+                        <button onClick={() => handleFeedbackClick('harika')} className="w-full text-left flex items-center px-4 py-2 text-sm text-text-primary hover:bg-green-50 hover:text-green-800">
+                            <i className="fas fa-thumbs-up fa-fw mr-3 text-green-500"></i> Harika
+                        </button>
+                        <button onClick={() => handleFeedbackClick('duzeltilmeli')} className="w-full text-left flex items-center px-4 py-2 text-sm text-text-primary hover:bg-yellow-50 hover:text-yellow-800">
+                            <i className="fas fa-pencil fa-fw mr-3 text-yellow-500"></i> Düzeltilmeli
+                        </button>
+                        <button onClick={() => handleFeedbackClick('ise_yaramaz')} className="w-full text-left flex items-center px-4 py-2 text-sm text-text-primary hover:bg-red-50 hover:text-red-800">
+                            <i className="fas fa-thumbs-down fa-fw mr-3 text-red-500"></i> İşe Yaramaz
+                        </button>
+                    </div>
+                )}
+            </div>
         </div>
     </div>
   );
 };
 
 
-export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) => {
+export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions, setNotification }) => {
   const [activeTab, setActiveTab] = useState<'preview' | 'json'>('preview');
   const [copied, setCopied] = useState(false);
   const [isProcessingPdf, setIsProcessingPdf] = useState(false);
   const printAreaRef = useRef<HTMLDivElement>(null);
-  const [feedback, setFeedback] = useState<{ [key: number]: string }>({});
   const [generatedImages, setGeneratedImages] = useState<{ [key: number]: string }>({});
   const [imageLoadingStates, setImageLoadingStates] = useState<{ [key: number]: boolean }>({});
 
 
-  const handleFeedback = (questionIndex: number, rating: string) => {
-    setFeedback(prev => ({ ...prev, [questionIndex]: rating }));
+  const handleFeedback = (rating: string) => {
+    setNotification({ message: 'Değerlendirmeniz için teşekkürler!', type: 'success' });
   };
 
   const handleGenerateImage = async (questionIndex: number, prompt: string, quality: 'high' | 'fast') => {
@@ -493,9 +488,11 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
     try {
         const base64Image = await generateImage(prompt, quality);
         setGeneratedImages(prev => ({ ...prev, [questionIndex]: base64Image }));
+        setNotification({ message: 'Görsel başarıyla oluşturuldu.', type: 'success' });
     } catch (error) {
         console.error("Görsel oluşturulamadı:", error);
-        alert(error instanceof Error ? error.message : "Görsel oluşturulurken bir hata oluştu.");
+        const errorMessage = error instanceof Error ? error.message : "Görsel oluşturulurken bir hata oluştu.";
+        setNotification({ message: errorMessage, type: 'error' });
     } finally {
         setImageLoadingStates(prev => ({ ...prev, [questionIndex]: false }));
     }
@@ -524,6 +521,7 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
   const handleCopy = () => {
     navigator.clipboard.writeText(jsonlString);
     setCopied(true);
+    setNotification({ message: 'JSONL başarıyla kopyalandı!', type: 'success' });
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -569,7 +567,7 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
         pdf.save(`turkgen-sorular-${Date.now()}.pdf`);
     } catch (error) {
         console.error("Error generating PDF:", error);
-        alert("PDF oluşturulurken bir hata oluştu.");
+        setNotification({ message: 'PDF oluşturulurken bir hata oluştu.', type: 'error' });
     } finally {
         setIsProcessingPdf(false);
     }
@@ -589,10 +587,10 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
         };
         archive.push(newExam);
         localStorage.setItem('turkGenSoruArsivi', JSON.stringify(archive));
-        alert(`"${examName}" başarıyla arşive kaydedildi!`);
+        setNotification({ message: `"${examName}" başarıyla arşive kaydedildi!`, type: 'success' });
     } catch (error) {
         console.error("Arşive kaydederken hata oluştu:", error);
-        alert("Arşive kaydederken bir hata oluştu. Tarayıcınızda yeterli alan olmayabilir.");
+        setNotification({ message: 'Arşive kaydederken bir hata oluştu. Tarayıcınızda yeterli alan olmayabilir.', type: 'error' });
     }
   };
 
@@ -652,7 +650,6 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
                     settings={printSettings} 
                     index={index}
                     onFeedback={handleFeedback}
-                    feedbackStatus={feedback[index]}
                     onGenerateImage={handleGenerateImage}
                     generatedImage={generatedImages[index]}
                     isImageLoading={imageLoadingStates[index]}

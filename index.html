@@ -169,15 +169,25 @@
   }
   .details-hidden details { display: none; }
   
-  /* Bildirim Animasyonu */
-  @keyframes fade-in-out {
-    0% { opacity: 0; transform: translateY(-20px); }
-    15% { opacity: 1; transform: translateY(0); }
-    85% { opacity: 1; transform: translateY(0); }
-    100% { opacity: 0; transform: translateY(-20px); }
+  /* YENİ BİLDİRİM TOAST ANİMASYONLARI */
+  @keyframes slide-in-from-right {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
   }
-  .animate-fade-in-out { animation: fade-in-out 3s ease-in-out forwards; }
+  .animate-slide-in-from-right { animation: slide-in-from-right 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
   
+  @keyframes fade-out-to-right {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+  }
+  .animate-fade-out-to-right { animation: fade-out-to-right 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+  
+  @keyframes progress-bar {
+    from { width: 100%; }
+    to { width: 0%; }
+  }
+  .animate-progress-bar { animation: progress-bar 5s linear forwards; }
+
   /* Yükleme Spinner Animasyonu */
   @keyframes spin-slow {
     from { transform: rotate(0deg); }
