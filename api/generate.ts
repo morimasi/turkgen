@@ -24,9 +24,13 @@ export default async function handler(req: Request) {
             async start(controller) {
                 const encoder = new TextEncoder();
 
-                // Soruları paralel olarak değil, sırayla (sequential) oluştur.
-                // Bu, API hız limitlerine takılma riskini azaltır ve daha güvenilir sonuçlar verir.
-                for (let i = 0; i < params.questionCount; i++) {
+                let successfulQuestions = 0;
+                const maxAttempts = params.questionCount + 5; // Retries için ek deneme hakkı
+                let attempts = 0;
+
+                // İstenen sayıda BAŞARILI soru üretilene kadar döngüyü sürdür.
+                while (successfulQuestions < params.questionCount && attempts < maxAttempts) {
+                    attempts++;
                     try {
                         const prompt = createPrompt(params);
                         const response = await ai.models.generateContent({
@@ -40,19 +44,16 @@ export default async function handler(req: Request) {
                         const jsonString = response.text;
                         const cleanedJsonString = jsonString.replace(/^```json\s*|```$/g, '').trim();
 
-                        // Kalite Kontrolü: AI'dan boş bir yanıt gelmediğinden emin ol.
                         if (cleanedJsonString) {
                             const parsedData = JSON.parse(cleanedJsonString);
-                            // AI'nın tek bir nesne mi yoksa tek elemanlı bir dizi mi döndürdüğünü kontrol et.
                             const question: Question = Array.isArray(parsedData) ? parsedData[0] : parsedData;
                             
                             // Soru metninin varlığını ve boş olmadığını kontrol et.
-                            // Bu, "içeriği olmayan boş soru" sorununu önler.
                             if (question && question.soru_metni && question.soru_metni.trim() !== '') {
-                                // Soru geçerliyse, stream'e gönder.
+                                // Soru geçerliyse, stream'e gönder ve başarılı soru sayısını artır.
                                 controller.enqueue(encoder.encode(JSON.stringify(question) + '\n'));
+                                successfulQuestions++;
                             } else {
-                                // Soru geçersizse, konsola bir uyarı yaz ve atla.
                                 console.warn("Skipping invalid/empty question from AI:", cleanedJsonString);
                             }
                         } else {
@@ -61,8 +62,12 @@ export default async function handler(req: Request) {
 
                     } catch (error) {
                         // Bir soru üretilirken hata olursa, işlemi durdurma, sadece hatayı logla ve devam et.
-                        console.error(`Error generating question ${i + 1} of ${params.questionCount}:`, error);
+                        console.error(`Error during question generation attempt ${attempts}:`, error);
                     }
+                }
+                
+                if (successfulQuestions < params.questionCount) {
+                     console.error(`Failed to generate the requested number of questions. Got ${successfulQuestions}, wanted ${params.questionCount}.`);
                 }
                 
                 // Tüm sorular istendikten sonra stream'i kapat.
@@ -106,7 +111,7 @@ const createPrompt = (params: QuestionGenerationParams): string => {
 
 
   return `
-Aşağıdaki kriterlere ve kurallara göre 1 adet Türkçe sorusu oluştur ve cevabını yalnızca tek bir soru nesnesi içeren JSON formatında döndür. Yanıtın bir JSON dizisi \`[]\` içinde OLMAMALIDIR.
+Aşağıdaki kriterlere ve kurallara göre 1 adet Türkçe sorusu oluştur ve cevabını yalnızca tek bir soru nesnesi içeren JSON formatında döndür. Yanıtın bir JSON dizisi \`[]\` içinde OLMAMALIDIR. Bu, bir setin parçası olan tek bir sorudur, bu yüzden lütfen önceki yanıtlardan farklı ve özgün olduğundan emin ol.
 
 **Kriterler:**
 - Sınıf: ${params.grade}
