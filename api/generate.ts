@@ -1,6 +1,7 @@
 
+
 import { GoogleGenAI, Type } from "@google/genai";
-import type { Question, QuestionGenerationParams } from '../types';
+import type { Question, QuestionGenerationParams } from '../src/types';
 
 // Vercel Serverless Function for Node.js runtime
 export default async function handler(req: any, res: any) {
