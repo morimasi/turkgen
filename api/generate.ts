@@ -21,7 +21,7 @@ export default async function handler(req: any, res: any) {
         const bulkPrompt = createBulkQuestionPrompt(params);
 
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash', // Switched to the faster model for bulk generation
+            model: 'gemini-flash-latest', // Switched to the latest and fastest model for bulk generation
             contents: bulkPrompt,
             config: {
                 systemInstruction: systemInstruction,
