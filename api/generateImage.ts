@@ -1,5 +1,6 @@
 
-import { GoogleGenAI, Modality } from "@google/genai";
+
+import { GoogleGenAI } from "@google/genai";
 
 // Vercel Serverless Function for Node.js runtime
 export default async function handler(req: any, res: any) {
@@ -21,23 +22,22 @@ export default async function handler(req: any, res: any) {
         
         const ai = new GoogleGenAI({ apiKey });
         
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash-image',
-            contents: {
-                parts: [{ text: prompt }],
-            },
+        const response = await ai.models.generateImages({
+            model: 'imagen-4.0-generate-001',
+            prompt: prompt,
             config: {
-                responseModalities: [Modality.IMAGE],
+              numberOfImages: 1,
+              outputMimeType: 'image/png',
             },
         });
 
-        const firstPart = response.candidates?.[0]?.content?.parts?.[0];
+        const firstImage = response.generatedImages?.[0];
 
-        if (firstPart && 'inlineData' in firstPart && firstPart.inlineData) {
-            const base64ImageBytes: string = firstPart.inlineData.data;
+        if (firstImage && firstImage.image.imageBytes) {
+            const base64ImageBytes: string = firstImage.image.imageBytes;
             return res.status(200).json({ image: base64ImageBytes });
         } else {
-            console.error("No image data in Gemini response:", JSON.stringify(response, null, 2));
+            console.error("No image data in Imagen response:", JSON.stringify(response, null, 2));
             throw new Error("Yapay zeka modelinden görsel verisi alınamadı.");
         }
 
