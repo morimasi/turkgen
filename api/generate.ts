@@ -18,47 +18,37 @@ export default async function handler(req: any, res: any) {
         const params: QuestionGenerationParams = req.body;
         const ai = new GoogleGenAI({ apiKey });
 
-        // Generate N questions in parallel
-        const questionPromises = Array.from({ length: params.questionCount }, () => {
-            const singleQuestionPrompt = createSingleQuestionPrompt(params);
-            return ai.models.generateContent({
-                model: 'gemini-2.5-pro',
-                contents: singleQuestionPrompt,
-                config: {
-                    systemInstruction: systemInstruction,
-                    responseMimeType: "application/json",
-                    responseSchema: questionSchema,
-                }
-            });
-        });
+        const bulkPrompt = createBulkQuestionPrompt(params);
 
-        const results = await Promise.allSettled(questionPromises);
-
-        const successfulQuestions: Question[] = [];
-        results.forEach((result, index) => {
-            if (result.status === 'fulfilled') {
-                try {
-                    const jsonString = result.value.text.trim();
-                    const question = JSON.parse(jsonString);
-                    successfulQuestions.push(question);
-                } catch (e) {
-                    console.error(`Soru ${index + 1} için JSON ayrıştırma hatası:`, e);
-                    console.error('Gelen Hatalı Metin:', result.value.text);
-                }
-            } else {
-                console.error(`Soru ${index + 1} üretilemedi:`, result.reason);
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash', // Switched to the faster model for bulk generation
+            contents: bulkPrompt,
+            config: {
+                systemInstruction: systemInstruction,
+                responseMimeType: "application/json",
+                responseSchema: bulkQuestionSchema,
             }
         });
 
-        if (successfulQuestions.length < params.questionCount) {
-             const errorMessage = `İstenen sayıda soru üretilemedi. ${params.questionCount} sorudan yalnızca ${successfulQuestions.length} tanesi başarıyla oluşturuldu. Lütfen tekrar deneyin.`;
-             return res.status(500).json({ error: errorMessage });
+        const jsonString = response.text.trim();
+        const questions: Question[] = JSON.parse(jsonString);
+        
+        if (!Array.isArray(questions) || questions.length === 0) {
+            throw new Error("API'den beklenen formatta (JSON dizisi) bir yanıt alınamadı.");
         }
 
-        return res.status(200).json(successfulQuestions);
+        if (questions.length < params.questionCount) {
+             const errorMessage = `İstenen sayıda soru üretilemedi. ${params.questionCount} sorudan yalnızca ${questions.length} tanesi başarıyla oluşturuldu. Lütfen tekrar deneyin.`;
+             return res.status(500).json({ error: errorMessage });
+        }
+        
+        return res.status(200).json(questions);
 
     } catch (error: any) {
         console.error("Error in /api/generate:", error);
+        if (error instanceof SyntaxError) {
+             return res.status(500).json({ error: "Soru üretilirken yapay zekadan gelen yanıt ayrıştırılamadı. Lütfen tekrar deneyin.", details: error.message });
+        }
         return res.status(500).json({ error: "Soru üretilirken sunucu tarafında genel bir hata oluştu.", details: error.message });
     }
 }
@@ -103,36 +93,38 @@ const questionSchema = {
     ]
 };
 
+const bulkQuestionSchema = {
+    type: Type.ARRAY,
+    description: "Oluşturulan tüm soruları içeren bir dizi.",
+    items: questionSchema
+};
 
 const systemInstruction = `Sen, Türk Dili ve Edebiyatı alanında uzmanlaşmış, ölçme-değerlendirme ve bilişsel pedagoji konularında derinlemesine bilgi sahibi bir Türk Dili Profesörüsün. Temel görevin, 2025 Millî Eğitim Bakanlığı (MEB) Türkçe Dersi Öğretim Programı'nın ruhuna ve hedeflerine sadık kalarak, ortaokul seviyesindeki (4-8. sınıflar) öğrenciler için akademik geçerliliği ve güvenirliği yüksek, özgün ve yenilikçi sorular tasarlamaktır. Hazırlayacağın her soru, sadece müfredat kazanımlarını ölçmekle kalmamalı, aynı zamanda öğrencilerin üst düzey düşünme becerilerini (analiz, sentez, değerlendirme), eleştirel okuryazarlık yetilerini ve metinlerarası bağlantı kurma kapasitelerini de harekete geçirmelidir. Çıktıların, talep edilen JSON formatına harfiyen uymalı; format dışında hiçbir yorum, açıklama veya ek metin içermemelidir. Akademik titizlik ve pedagojik mükemmellik, çalışmalarının temelini oluşturmalıdır.`;
 
-const createSingleQuestionPrompt = (params: QuestionGenerationParams): string => {
-  const randomObjective = params.objectives[Math.floor(Math.random() * params.objectives.length)];
-  const randomUnit = params.units[Math.floor(Math.random() * params.units.length)];
+const createBulkQuestionPrompt = (params: QuestionGenerationParams): string => {
+  const objectivesText = params.objectives.map(o => `- ${o.code} ${o.text}`).join('\n');
+  const unitsText = params.units.map(u => `- ${u.no}. Ünite: ${u.name}`).join('\n');
 
   return `
-Aşağıdaki kriterlere ve kurallara göre **1 (bir) adet** Türkçe sorusu oluştur ve cevabını yalnızca bu tek soru nesnesini içeren bir JSON formatında döndür.
+Aşağıdaki kriterlere ve kurallara göre **toplam ${params.questionCount} adet** Türkçe sorusu oluştur ve cevabını bu soruları içeren **tek bir JSON dizisi (array)** formatında döndür.
 
 **Kriterler:**
 - Sınıf: ${params.grade}
-- Ünite: ${randomUnit.no}. Ünite: ${randomUnit.name} (Bu ünite genel bir bağlamdır, asıl odak aşağıdaki kazanımdır.)
-- Odaklanılacak Kazanım: ${randomObjective.code} ${randomObjective.text}
-- Soru Tipi: "${params.questionType}"
-- Zorluk Seviyesi: "${params.difficulty}"
+- Kapsamdaki Üniteler:\n${unitsText}
+- Kapsamdaki Kazanımlar:\n${objectivesText}
+- Soru Tipi: "${params.questionType}" (Tüm sorular bu tipte olmalı)
+- Zorluk Seviyesi: "${params.difficulty}" (Tüm sorular bu seviyede olmalı)
 ${params.customInstructions ? `- Ek Talimatlar: "${params.customInstructions}"` : ''}
 
-**Kurallar:**
-1.  **JSON Yapısı:** Çıktın, **sadece tek bir soru nesnesi** olmalıdır. Dizi (\`[]\`) içinde olmamalıdır ve schema'ya tam uymalıdır.
-2.  **Özgünlük:** Soru, paragraf ve seçenekler tamamen özgün olmalıdır. Daha önce üretilenlerden farklı bir soru oluştur.
-3.  **Soru Tiplerine Göre:**
-    -   'coktan_secmeli': 'secenekler' bir obje, 'yanlis_secenek_tipleri' 3 elemanlı bir dizi ve 'dogru_cevap' doğru seçeneğin harfi (A, B, C, D) olmalıdır. Çeldiriciler mantıklı ve güçlü olmalı.
+**Önemli Kurallar:**
+1.  **JSON Dizisi:** Çıktın, **sadece ve sadece ${params.questionCount} adet soru nesnesi içeren tek bir JSON dizisi** olmalıdır. Dizi dışında hiçbir metin, açıklama veya not içermemelidir. Schema'ya tam uy.
+2.  **Kazanım Dağılımı:** Soruları, sağlanan "Kapsamdaki Kazanımlar" listesindeki farklı kazanımlara dengeli bir şekilde dağıtmaya çalış. Her sorunun \`kazanim_kodu\` ve \`kazanim_metni\` alanları listedeki kazanımlardan biriyle eşleşmelidir.
+3.  **Özgünlük:** Her bir soru, paragraf ve seçenekler tamamen özgün olmalıdır. Dizideki sorular birbirinden farklı olmalıdır.
+4.  **Soru Tiplerine Göre:**
+    -   'coktan_secmeli': 'secenekler' bir obje, 'yanlis_secenek_tipleri' 3 elemanlı bir dizi ve 'dogru_cevap' doğru seçeneğin harfi (A, B, C, D) olmalıdır. Çeldiriciler mantıklı ve güçlü olmalı. Doğru cevap şıkkını (A, B, C, D) sorular arasında rastgele dağıt.
     -   'dogru_yanlis': 'secenekler' ve 'yanlis_secenek_tipleri' null olmalı. 'soru_metni' bir yargı cümlesi olmalı. 'dogru_cevap' "Doğru" veya "Yanlış" metni olmalıdır.
     -   'bosluk_doldurma': 'secenekler' ve 'yanlis_secenek_tipleri' null olmalı. 'soru_metni' içindeki boşluk '___' ile belirtilmeli. 'dogru_cevap' boşluğa gelecek doğru ifade olmalıdır.
-4.  **Pedagojik Derinlik:**
-    -   \`yanlis_secenek_tipleri\`: Her bir çeldiricinin hangi bilişsel hatayı hedeflediğini veya ne tür bir yanıltmaca olduğunu açıkla (Örn: "Yakın anlamlı çeldirici").
-    -   \`gercek_yasam_baglantisi\`: Kazanımın günlük hayattaki önemini veya kullanımını, bir velinin dahi anlayabileceği netlikte tek bir cümleyle ifade et.
-    -   \`cozum_anahtari\`: Bir öğretmenin konuyu özetleyebileceği veya çözüm yolunu gösterebileceği 1-2 cümlelik net bir açıklama olsun.
-5.  **Dil ve Üslup:** Tamamen Türkçe dilbilgisi, imla ve noktalama kurallarına uy.
+5.  **Pedagojik Derinlik:** Her soru nesnesi, \`yanlis_secenek_tipleri\`, \`gercek_yasam_baglantisi\`, \`cozum_anahtari\` gibi pedagojik alanları eksiksiz ve kaliteli bir şekilde doldurmalıdır.
 
-Lütfen şimdi istenen 1 (bir) adet soruyu oluştur.`;
+Lütfen şimdi istenen ${params.questionCount} adet soruyu içeren JSON dizisini oluştur.`;
 };
