@@ -8,7 +8,7 @@ interface QuestionFormProps {
 }
 
 const AccordionSection: React.FC<{ title: string; children: React.ReactNode; defaultOpen?: boolean }> = ({ title, children, defaultOpen = false }) => (
-    <details className="border border-border rounded-lg mb-4 overflow-hidden group rotate-90-on-open" open={defaultOpen}>
+    <details className="border border-border rounded-lg mb-4 group rotate-90-on-open" open={defaultOpen}>
         <summary className="flex items-center justify-between p-3 cursor-pointer bg-surface hover:bg-worksheet-surface transition-colors">
             <h3 className="font-semibold text-text-primary">{title}</h3>
             <svg className="w-5 h-5 text-text-secondary transform transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
