@@ -42,29 +42,29 @@ export const ArchiveModal: React.FC<ArchiveModalProps> = ({ isOpen, onClose, onL
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center" onClick={onClose}>
-      <div className="bg-white rounded-lg shadow-xl p-8 max-w-3xl w-full m-4 flex flex-col" onClick={e => e.stopPropagation()}>
-        <div className="flex justify-between items-center border-b pb-3 mb-4">
-          <h2 className="text-2xl font-bold text-gray-800">Sınav Arşivim</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+      <div className="bg-surface rounded-lg shadow-xl p-8 max-w-3xl w-full m-4 flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="flex justify-between items-center border-b border-border pb-3 mb-4">
+          <h2 className="text-2xl font-bold text-text-primary">Sınav Arşivim</h2>
+          <button onClick={onClose} className="text-text-secondary hover:text-text-primary text-2xl">&times;</button>
         </div>
         <div className="flex-grow overflow-y-auto max-h-[70vh] pr-2">
           {archivedExams.length === 0 ? (
-            <div className="text-center py-10 text-gray-500">
+            <div className="text-center py-10 text-text-secondary">
               <i className="fas fa-archive fa-3x mb-4"></i>
               <p>Arşivinizde kayıtlı sınav bulunmuyor.</p>
             </div>
           ) : (
             <ul className="space-y-3">
               {archivedExams.map((exam) => (
-                <li key={exam.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+                <li key={exam.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-border hover:shadow-md transition-shadow">
                   <div>
-                    <p className="font-semibold text-gray-800">{exam.name}</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="font-semibold text-text-primary">{exam.name}</p>
+                    <p className="text-sm text-text-secondary">
                       {new Date(exam.date).toLocaleString('tr-TR')} &bull; {exam.questions.length} soru
                     </p>
                   </div>
                   <div className="flex-shrink-0 space-x-2">
-                    <button onClick={() => handleLoad(exam)} className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors">
+                    <button onClick={() => handleLoad(exam)} className="px-3 py-1.5 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 transition-colors">
                       <i className="fas fa-upload mr-1"></i> Yükle
                     </button>
                     <button onClick={() => handleDelete(exam.id)} className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors">
@@ -76,8 +76,8 @@ export const ArchiveModal: React.FC<ArchiveModalProps> = ({ isOpen, onClose, onL
             </ul>
           )}
         </div>
-         <div className="mt-6 text-right border-t pt-4">
-          <button onClick={onClose} className="bg-gray-600 text-white px-5 py-2 rounded-lg hover:bg-gray-700 transition-colors">
+         <div className="mt-6 text-right border-t border-border pt-4">
+          <button onClick={onClose} className="bg-slate-600 text-white px-5 py-2 rounded-lg hover:bg-slate-700 transition-colors">
             Kapat
           </button>
         </div>

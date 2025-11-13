@@ -4,7 +4,7 @@ import { QuestionForm } from './components/QuestionForm';
 import { QuestionDisplay } from './components/QuestionDisplay';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { generateQuestions } from './services/geminiService';
-import type { Question, QuestionGenerationParams } from './types';
+import type { Question, QuestionGenerationParams, Theme } from './types';
 import { AboutModal } from './components/AboutModal';
 import { ArchiveModal } from './components/ArchiveModal';
 
@@ -17,6 +17,13 @@ const App: React.FC = () => {
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState<boolean>(false);
   const [notification, setNotification] = useState<string | null>(null);
   const [font, setFont] = useState<'Inter' | 'Atkinson Hyperlegible'>('Inter');
+  const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('turkGenTheme') as Theme) || 'sky');
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.className = `theme-${theme}`;
+    localStorage.setItem('turkGenTheme', theme);
+  }, [theme]);
 
   useEffect(() => {
     const newClass = font === 'Atkinson Hyperlegible' ? 'font-atkinson-hyperlegible' : 'font-inter';
@@ -52,12 +59,14 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800">
+    <div className="min-h-screen bg-background text-text-primary">
       <Header
         onShowAbout={() => setIsAboutModalOpen(true)}
         onShowArchive={() => setIsArchiveModalOpen(true)}
         fontFamily={font}
         onToggleFont={toggleFont}
+        theme={theme}
+        setTheme={setTheme}
       />
       <AboutModal isOpen={isAboutModalOpen} onClose={() => setIsAboutModalOpen(false)} />
       <ArchiveModal
@@ -74,20 +83,20 @@ const App: React.FC = () => {
         )}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Soru Kriterleri Formu - Sol Panel */}
-            <div className="lg:col-span-1 bg-white p-6 rounded-xl shadow-md border border-gray-200 no-print">
-                <h2 className="text-2xl font-bold text-gray-700 mb-6 border-b pb-4">Soru Kriterleri</h2>
+            <div className="lg:col-span-1 bg-surface p-6 rounded-xl shadow-md border border-border no-print">
+                <h2 className="text-2xl font-bold text-text-primary mb-6 border-b border-border pb-4">Soru Kriterleri</h2>
                 <QuestionForm onGenerate={handleGenerateQuestion} isLoading={isLoading} />
             </div>
             
             {/* Çalışma Sayfası (Soru Görüntüleme) - Sağ Panel */}
-            <div className="lg:col-span-3 bg-white p-6 rounded-xl shadow-md border border-gray-200 flex flex-col">
-                <h2 className="text-2xl font-bold text-gray-700 mb-6 border-b pb-4">Çalışma Sayfası</h2>
+            <div className="lg:col-span-3 bg-surface p-6 rounded-xl shadow-md border border-border flex flex-col">
+                <h2 className="text-2xl font-bold text-text-primary mb-6 border-b border-border pb-4">Çalışma Sayfası</h2>
                 <div className="flex-grow flex items-center justify-center">
                 {isLoading && <LoadingSpinner />}
                 {error && <div className="text-red-500 bg-red-100 p-4 rounded-lg w-full text-center">{error}</div>}
                 {generatedQuestions && generatedQuestions.length > 0 && <QuestionDisplay questions={generatedQuestions} />}
                 {!isLoading && !error && (!generatedQuestions || generatedQuestions.length === 0) && (
-                    <div className="text-center text-gray-500">
+                    <div className="text-center text-text-secondary">
                     <i className="fas fa-file-alt fa-3x mb-4"></i>
                     <p>Yeni bir çalışma sayfası oluşturmak için soldaki formu doldurun.</p>
                     </div>

@@ -54,6 +54,10 @@ export interface PrintSettings {
   hideAnswers: boolean;
   hideDetails: boolean;
   showBorders: boolean;
+  showQuestionNumbers: boolean;
+  showExamTitle: boolean;
+  examTitle: string;
+  showWorksheetHeader: boolean;
 }
 
 export interface ArchivedExam {
@@ -62,3 +66,5 @@ export interface ArchivedExam {
     date: string;
     questions: Question[];
 }
+
+export type Theme = 'sky' | 'emerald' | 'rose' | 'indigo' | 'slate';

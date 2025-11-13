@@ -1,13 +1,126 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { MEB_CURRICULUM } from '../constants';
-import type { QuestionGenerationParams, QuestionType, Difficulty, Unit, Objective } from '../types';
+import type { QuestionGenerationParams, QuestionType, Difficulty, Unit } from '../types';
 
 interface QuestionFormProps {
   onGenerate: (params: QuestionGenerationParams) => void;
   isLoading: boolean;
 }
 
-const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+const AccordionSection: React.FC<{ title: string; children: React.ReactNode; defaultOpen?: boolean }> = ({ title, children, defaultOpen = false }) => (
+    <details className="border border-border rounded-lg mb-4 overflow-hidden group rotate-90-on-open" open={defaultOpen}>
+        <summary className="flex items-center justify-between p-3 cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+            <h3 className="font-semibold text-text-primary">{title}</h3>
+            <svg className="w-5 h-5 text-text-secondary transform transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+            </svg>
+        </summary>
+        <div className="p-4 bg-surface">
+            {children}
+        </div>
+    </details>
+);
+
+const CurriculumSelector: React.FC<{
+    units: Unit[];
+    selectedUnitNos: string[];
+    selectedObjectiveCodes: string[];
+    onUnitToggle: (unitNo: string) => void;
+    onObjectiveToggle: (objCode: string) => void;
+    onSelectAllUnits: (select: boolean) => void;
+}> = ({ units, selectedUnitNos, selectedObjectiveCodes, onUnitToggle, onObjectiveToggle, onSelectAllUnits }) => {
+
+    const [expandedUnits, setExpandedUnits] = useState<string[]>([]);
+    
+    const handleUnitExpandToggle = (unitNo: string) => {
+        setExpandedUnits(prev => prev.includes(unitNo) ? prev.filter(no => no !== unitNo) : [...prev, unitNo]);
+    };
+
+    const handleSelectAllObjectivesForUnit = (unit: Unit, select: boolean) => {
+        unit.objectives.forEach(obj => {
+            if (select && !selectedObjectiveCodes.includes(obj.code)) {
+                onObjectiveToggle(obj.code);
+            } else if (!select && selectedObjectiveCodes.includes(obj.code)) {
+                onObjectiveToggle(obj.code);
+            }
+        });
+    };
+
+    return (
+        <div className="border border-border rounded-lg max-h-80 overflow-y-auto bg-surface">
+            <div className="sticky top-0 bg-slate-50 border-b border-border p-2 z-10">
+                 <div className="flex items-center">
+                    <input
+                        type="checkbox"
+                        id="select-all-units"
+                        checked={units.length > 0 && selectedUnitNos.length === units.length}
+                        onChange={(e) => onSelectAllUnits(e.target.checked)}
+                        className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                    />
+                    <label htmlFor="select-all-units" className="ml-2 block text-sm font-semibold text-text-primary">
+                        Tüm Üniteleri Seç
+                    </label>
+                </div>
+            </div>
+            {units.map(unit => {
+                const isUnitSelected = selectedUnitNos.includes(unit.no.toString());
+                const isExpanded = expandedUnits.includes(unit.no.toString());
+                const areAllObjectivesSelected = unit.objectives.every(obj => selectedObjectiveCodes.includes(obj.code));
+                
+                return (
+                    <div key={unit.no} className="border-b border-border last:border-b-0">
+                        <div className="flex items-center p-2 hover:bg-slate-50 cursor-pointer" onClick={() => handleUnitExpandToggle(unit.no.toString())}>
+                             <input
+                                type="checkbox"
+                                id={`unit-${unit.no}`}
+                                checked={isUnitSelected}
+                                onChange={() => onUnitToggle(unit.no.toString())}
+                                onClick={(e) => e.stopPropagation()} // Prevent expansion when clicking checkbox
+                                className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                            />
+                            <label htmlFor={`unit-${unit.no}`} className="ml-2 flex-grow text-sm font-medium text-text-primary">{unit.name}</label>
+                            <svg className={`w-5 h-5 text-text-secondary transform transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </div>
+                        {isExpanded && (
+                            <div className="pl-6 pr-2 py-2 bg-slate-50/50">
+                                <div className="flex items-center pb-2 mb-2 border-b border-border">
+                                    <input
+                                        type="checkbox"
+                                        id={`select-all-obj-${unit.no}`}
+                                        checked={unit.objectives.length > 0 && areAllObjectivesSelected}
+                                        onChange={(e) => handleSelectAllObjectivesForUnit(unit, e.target.checked)}
+                                        className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                    />
+                                    <label htmlFor={`select-all-obj-${unit.no}`} className="ml-2 block text-xs font-semibold text-text-secondary">
+                                        Tüm Kazanımları Seç
+                                    </label>
+                                </div>
+                                {unit.objectives.map(obj => (
+                                    <div key={obj.code} className="flex items-start p-1.5 rounded-md hover:bg-slate-100">
+                                        <input
+                                            type="checkbox"
+                                            id={obj.code}
+                                            value={obj.code}
+                                            checked={selectedObjectiveCodes.includes(obj.code)}
+                                            onChange={() => onObjectiveToggle(obj.code)}
+                                            className="h-4 w-4 mt-1 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                        />
+                                        <label htmlFor={obj.code} className="ml-2 block text-sm text-text-secondary">
+                                            {obj.code} - {obj.text}
+                                        </label>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
+        </div>
+    );
+};
+
 
 export const QuestionForm: React.FC<QuestionFormProps> = ({ onGenerate, isLoading }) => {
   const [grade, setGrade] = useState<string>('5');
@@ -20,27 +133,27 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ onGenerate, isLoadin
 
   const availableUnits = useMemo(() => MEB_CURRICULUM[grade]?.units || [], [grade]);
   
-  const derivedObjectives = useMemo(() => {
-    return availableUnits
-      .filter(u => selectedUnitNos.includes(u.no.toString()))
-      .flatMap(u => u.objectives);
-  }, [availableUnits, selectedUnitNos]);
-
-  // Sınıf değiştiğinde ünite seçimlerini temizle
+  // Sınıf değiştiğinde seçimleri sıfırla
   useEffect(() => {
     setSelectedUnitNos([]);
+    setSelectedObjectiveCodes([]);
   }, [grade]);
   
-  // Ünite seçimi değiştiğinde kazanım seçimlerini temizle
+  // Ünite seçimi değiştiğinde, seçili olmayan ünitelerin kazanımlarını da temizle
   useEffect(() => {
-     setSelectedObjectiveCodes([]);
-  }, [selectedUnitNos]);
+     const allowedObjectiveCodes = availableUnits
+        .filter(u => selectedUnitNos.includes(u.no.toString()))
+        .flatMap(u => u.objectives.map(o => o.code));
+     setSelectedObjectiveCodes(prev => prev.filter(code => allowedObjectiveCodes.includes(code)));
+  }, [selectedUnitNos, availableUnits]);
 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const selectedUnits = availableUnits.filter(u => selectedUnitNos.includes(u.no.toString()));
-    const selectedObjectives = derivedObjectives.filter(o => selectedObjectiveCodes.includes(o.code));
+    const selectedObjectives = availableUnits
+        .flatMap(u => u.objectives)
+        .filter(o => selectedObjectiveCodes.includes(o.code));
 
     if (selectedUnits.length > 0 && selectedObjectives.length > 0) {
       onGenerate({
@@ -57,7 +170,7 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ onGenerate, isLoadin
     }
   };
   
-  const handleUnitSelection = (unitNo: string) => {
+  const handleUnitToggle = (unitNo: string) => {
     setSelectedUnitNos(prev => 
         prev.includes(unitNo) 
             ? prev.filter(no => no !== unitNo) 
@@ -65,166 +178,107 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ onGenerate, isLoadin
     );
   };
   
-  const handleObjectiveSelection = (objCode: string) => {
+  const handleObjectiveToggle = (objCode: string) => {
     setSelectedObjectiveCodes(prev => 
         prev.includes(objCode) 
             ? prev.filter(code => code !== objCode) 
             : [...prev, objCode]
     );
   };
-
-  const handleSelectAllUnits = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.checked) {
-          setSelectedUnitNos(availableUnits.map(u => u.no.toString()));
-      } else {
-          setSelectedUnitNos([]);
-      }
-  };
-
-  const handleSelectAllObjectives = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.checked) {
-          setSelectedObjectiveCodes(derivedObjectives.map(o => o.code));
-      } else {
-          setSelectedObjectiveCodes([]);
-      }
-  };
   
-  const CheckboxList = ({ title, items, selectedItems, onSelectItem, onSelectAll }: {
-      title: string;
-      items: { id: string; label: string; }[];
-      selectedItems: string[];
-      onSelectItem: (id: string) => void;
-      onSelectAll?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  }) => (
-      <div className="mb-3">
-          <label className="block text-sm font-medium text-gray-700 mb-2">{title}</label>
-          <div className="border border-gray-300 rounded-md max-h-48 overflow-y-auto p-2 bg-white">
-              {onSelectAll && items.length > 0 && (
-                  <div className="flex items-center p-2 border-b">
-                      <input
-                          type="checkbox"
-                          id={`select-all-${title}`}
-                          checked={items.length > 0 && selectedItems.length === items.length}
-                          onChange={onSelectAll}
-                          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <label htmlFor={`select-all-${title}`} className="ml-2 block text-sm font-semibold text-gray-800">
-                          Tümünü Seç
-                      </label>
-                  </div>
-              )}
-              {items.length === 0 && <p className="text-xs text-gray-500 p-2">Lütfen önce bir üst seçim yapınız.</p>}
-              {items.map(item => (
-                  <div key={item.id} className="flex items-center p-2 rounded-md hover:bg-gray-50">
-                      <input
-                          type="checkbox"
-                          id={item.id}
-                          value={item.id}
-                          checked={selectedItems.includes(item.id)}
-                          onChange={() => onSelectItem(item.id)}
-                          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <label htmlFor={item.id} className="ml-2 block text-sm text-gray-700">
-                          {item.label}
-                      </label>
-                  </div>
-              ))}
-          </div>
-      </div>
-  );
+  const handleSelectAllUnits = (select: boolean) => {
+      setSelectedUnitNos(select ? availableUnits.map(u => u.no.toString()) : []);
+  };
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="mb-3">
-          <label htmlFor="grade-select" className="block text-sm font-medium text-gray-700 mb-1">Sınıf</label>
-          <select
-              id="grade-select"
-              value={grade}
-              onChange={e => setGrade(e.target.value)}
-              disabled={isLoading}
-              className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-100"
-          >
-              {Object.keys(MEB_CURRICULUM).map(g => <option key={g} value={g}>{g}. Sınıf</option>)}
-          </select>
-      </div>
-
-      <CheckboxList 
-          title="Üniteler"
-          items={availableUnits.map(u => ({ id: u.no.toString(), label: u.name }))}
-          selectedItems={selectedUnitNos}
-          onSelectItem={handleUnitSelection}
-          onSelectAll={handleSelectAllUnits}
-      />
-      
-      <CheckboxList 
-          title="Kazanımlar"
-          items={derivedObjectives.map(o => ({ id: o.code, label: `${o.code} - ${o.text}` }))}
-          selectedItems={selectedObjectiveCodes}
-          onSelectItem={handleObjectiveSelection}
-          onSelectAll={handleSelectAllObjectives}
-      />
-
-      <div className="mb-3">
-          <label htmlFor="type-select" className="block text-sm font-medium text-gray-700 mb-1">Soru Tipi</label>
-          <select
-              id="type-select"
-              value={questionType}
-              onChange={e => setQuestionType(e.target.value as QuestionType)}
-              disabled={isLoading}
-              className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-100"
-          >
-              <option value="coktan_secmeli">Çoktan Seçmeli</option>
-              <option value="dogru_yanlis">Doğru / Yanlış</option>
-              <option value="bosluk_doldurma">Boşluk Doldurma</option>
-          </select>
-      </div>
-      <div className="mb-3">
-          <label htmlFor="difficulty-select" className="block text-sm font-medium text-gray-700 mb-1">Zorluk Seviyesi</label>
-          <select
-              id="difficulty-select"
-              value={difficulty}
-              onChange={e => setDifficulty(e.target.value as Difficulty)}
-              disabled={isLoading}
-              className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-100"
-          >
-              <option value="temel">Temel</option>
-              <option value="orta">Orta</option>
-              <option value="ileri">İleri</option>
-          </select>
-      </div>
-      
-      <div className="mb-3">
-          <label htmlFor="question-count" className="block text-sm font-medium text-gray-700 mb-1">Soru Sayısı</label>
-          <input 
-              type="number"
-              id="question-count"
-              value={questionCount}
-              onChange={e => setQuestionCount(Math.max(1, Math.min(50, parseInt(e.target.value, 10)) || 1))}
-              min="1"
-              max="50"
-              disabled={isLoading}
-              className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-100"
-          />
-      </div>
-
-      <div className="mt-3">
-        <label htmlFor="custom-instructions" className="block text-sm font-medium text-gray-700 mb-1">Ek Talimatlar (İsteğe Bağlı)</label>
-        <textarea
+       <AccordionSection title="1. Sınıf ve Ünite Seçimi" defaultOpen={true}>
+         <div className="mb-4">
+            <label htmlFor="grade-select" className="block text-sm font-medium text-text-secondary mb-1">Sınıf</label>
+            <select
+                id="grade-select"
+                value={grade}
+                onChange={e => setGrade(e.target.value)}
+                disabled={isLoading}
+                className="block w-full px-3 py-2 bg-surface border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm disabled:bg-gray-100"
+            >
+                {Object.keys(MEB_CURRICULUM).map(g => <option key={g} value={g}>{g}. Sınıf</option>)}
+            </select>
+        </div>
+         <label className="block text-sm font-medium text-text-secondary mb-2">Üniteler ve Kazanımlar</label>
+         <CurriculumSelector
+            units={availableUnits}
+            selectedUnitNos={selectedUnitNos}
+            selectedObjectiveCodes={selectedObjectiveCodes}
+            onUnitToggle={handleUnitToggle}
+            onObjectiveToggle={handleObjectiveToggle}
+            onSelectAllUnits={handleSelectAllUnits}
+         />
+       </AccordionSection>
+       
+       <AccordionSection title="2. Soru Ayarları">
+           <div className="grid grid-cols-2 gap-4">
+              <div>
+                  <label htmlFor="type-select" className="block text-sm font-medium text-text-secondary mb-1">Soru Tipi</label>
+                  <select
+                      id="type-select"
+                      value={questionType}
+                      onChange={e => setQuestionType(e.target.value as QuestionType)}
+                      disabled={isLoading}
+                      className="block w-full px-3 py-2 bg-surface border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm disabled:bg-gray-100"
+                  >
+                      <option value="coktan_secmeli">Çoktan Seçmeli</option>
+                      <option value="dogru_yanlis">Doğru / Yanlış</option>
+                      <option value="bosluk_doldurma">Boşluk Doldurma</option>
+                  </select>
+              </div>
+              <div>
+                  <label htmlFor="difficulty-select" className="block text-sm font-medium text-text-secondary mb-1">Zorluk Seviyesi</label>
+                  <select
+                      id="difficulty-select"
+                      value={difficulty}
+                      onChange={e => setDifficulty(e.target.value as Difficulty)}
+                      disabled={isLoading}
+                      className="block w-full px-3 py-2 bg-surface border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm disabled:bg-gray-100"
+                  >
+                      <option value="temel">Temel</option>
+                      <option value="orta">Orta</option>
+                      <option value="ileri">İleri</option>
+                  </select>
+              </div>
+           </div>
+            <div className="mt-4">
+              <label htmlFor="question-count" className="block text-sm font-medium text-text-secondary mb-1">Soru Sayısı</label>
+              <input 
+                  type="number"
+                  id="question-count"
+                  value={questionCount}
+                  onChange={e => setQuestionCount(Math.max(1, Math.min(50, parseInt(e.target.value, 10)) || 1))}
+                  min="1"
+                  max="50"
+                  disabled={isLoading}
+                  className="block w-full px-3 py-2 bg-surface border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm disabled:bg-gray-100"
+              />
+          </div>
+       </AccordionSection>
+       
+       <AccordionSection title="3. Ek Talimatlar (İsteğe Bağlı)">
+         <textarea
           id="custom-instructions"
           rows={2}
           value={customInstructions}
           onChange={e => setCustomInstructions(e.target.value)}
           disabled={isLoading}
           placeholder="Örn: Paragraf bir fabl olsun."
-          className="block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-100"
+          className="block w-full px-3 py-2 bg-surface border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm disabled:bg-gray-100"
         ></textarea>
-      </div>
+       </AccordionSection>
       
-      <div className="mt-6 flex flex-col sm:flex-row gap-3">
+      <div className="mt-6">
         <button 
           type="submit" 
           disabled={isLoading || selectedObjectiveCodes.length === 0}
-          className="w-full flex-grow flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors"
+          className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 ring-primary-500 disabled:bg-primary-300 disabled:cursor-not-allowed transition-colors"
         >
           {isLoading ? (
             <>
@@ -237,15 +291,6 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ onGenerate, isLoadin
           ) : (
             <><i className="fas fa-magic mr-2"></i>Soru Oluştur</>
           )}
-        </button>
-        <button
-          type="button"
-          disabled={true}
-          title="Sesli komut özelliği çoklu seçim ile uyumlu değildir."
-          className={`w-full sm:w-auto px-4 py-3 border rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors
-            bg-gray-300 cursor-not-allowed`}
-        >
-          <i className="fas fa-microphone-slash"></i>
         </button>
       </div>
 

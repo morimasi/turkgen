@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import type { Question, PrintSettings } from '../types';
 import jsPDF from 'jspdf';
@@ -33,25 +32,24 @@ const PrintSettingsToolbar: React.FC<PrintSettingsToolbarProps> = ({
     };
 
     const ToggleButton: React.FC<{
-        labelOn: string;
-        labelOff: string;
+        label: string;
         iconOn: string;
         iconOff: string;
         isOn: boolean;
         onClick: () => void;
-    }> = ({ labelOn, labelOff, iconOn, iconOff, isOn, onClick }) => (
+    }> = ({ label, iconOn, iconOff, isOn, onClick }) => (
         <button 
             onClick={onClick} 
-            title={isOn ? labelOn : labelOff} 
+            title={label} 
             aria-pressed={isOn}
             className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors ${
                 isOn 
-                ? 'bg-blue-100 text-blue-700 font-semibold' 
-                : 'bg-white text-slate-600 hover:bg-slate-100'
+                ? 'bg-primary-100 text-primary-700 font-semibold' 
+                : 'bg-surface text-text-secondary hover:bg-slate-100'
             } border border-slate-300 shadow-sm`}
         >
             <i className={`fas ${isOn ? iconOn : iconOff} fa-fw`}></i>
-            <span className="hidden sm:inline">{isOn ? labelOn : labelOff}</span>
+            <span className="hidden sm:inline">{label}</span>
         </button>
     );
     
@@ -74,77 +72,87 @@ const PrintSettingsToolbar: React.FC<PrintSettingsToolbarProps> = ({
     );
 
     return (
-        <div className="no-print p-3 bg-slate-100 border border-slate-200 rounded-lg mb-4 flex flex-wrap items-center justify-between gap-4 shadow-inner">
-            {/* Sol & Orta: Ayarlar */}
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-                {/* Section 1: Metin Biçimi */}
+        <div className="no-print p-3 bg-slate-100 border border-border rounded-lg mb-4 flex flex-col gap-4 shadow-inner">
+             {/* Üst Satır: Başlık ve Eylemler */}
+            <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-2 flex-grow" title="Sınav Başlığı">
+                    <i className="fas fa-heading text-text-secondary fa-fw text-lg"></i>
+                    <input
+                        type="text"
+                        id="examTitle"
+                        placeholder="Sınav Başlığı Girin..."
+                        value={settings.examTitle}
+                        onChange={(e) => handleSettingChange('examTitle', e.target.value)}
+                        className="flex-grow border-slate-300 rounded-md shadow-sm text-base p-1.5 focus:ring-primary-500 focus:border-primary-500"
+                    />
+                </div>
+                <div className="flex items-center gap-2">
+                    <ActionButton label="Arşive Kaydet" icon="fa-save" onClick={onSaveToArchive} className="bg-surface text-text-secondary hover:bg-slate-100 border border-slate-300"/>
+                    <ActionButton label="Yazdır" icon="fa-print" onClick={onPrint} className="bg-slate-600 text-white hover:bg-slate-700"/>
+                    <ActionButton label={isPdfProcessing ? 'İşleniyor...' : 'PDF İndir'} icon={isPdfProcessing ? 'fa-spinner fa-spin' : 'fa-file-pdf'} onClick={onDownloadPdf} disabled={isPdfProcessing} className="bg-primary-600 text-white hover:bg-primary-700"/>
+                </div>
+            </div>
+
+            {/* Alt Satır: Ayarlar ve Görünürlük */}
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-3 border-t border-border">
+                {/* Görünürlük Ayarları */}
+                <div className="flex items-center gap-2">
+                    <ToggleButton label="Başlık" iconOn="fa-eye" iconOff="fa-eye-slash" isOn={settings.showExamTitle} onClick={() => handleSettingChange('showExamTitle', !settings.showExamTitle)} />
+                    <ToggleButton label="Kazanımlar" iconOn="fa-info-circle" iconOff="fa-eye-slash" isOn={settings.showWorksheetHeader} onClick={() => handleSettingChange('showWorksheetHeader', !settings.showWorksheetHeader)} />
+                    <ToggleButton label="Soru No" iconOn="fa-list-ol" iconOff="fa-eye-slash" isOn={settings.showQuestionNumbers} onClick={() => handleSettingChange('showQuestionNumbers', !settings.showQuestionNumbers)} />
+                    <ToggleButton label="Cevaplar" iconOn="fa-key" iconOff="fa-eye-slash" isOn={!settings.hideAnswers} onClick={() => handleSettingChange('hideAnswers', !settings.hideAnswers)} />
+                    <ToggleButton label="Detaylar" iconOn="fa-book-open" iconOff="fa-eye-slash" isOn={!settings.hideDetails} onClick={() => handleSettingChange('hideDetails', !settings.hideDetails)} />
+                    <ToggleButton label="Kenarlık" iconOn="fa-border-all" iconOff="fa-border-none" isOn={settings.showBorders} onClick={() => handleSettingChange('showBorders', !settings.showBorders)} />
+                </div>
+                <div className="h-6 w-px bg-slate-300 hidden lg:block"></div>
+                 {/* Biçim Ayarları */}
                 <div className="flex items-center gap-x-4">
                     <div className="flex items-center" title="Yazı Tipi Boyutu">
-                        <i className="fas fa-text-height text-slate-500 mr-2"></i>
-                        <input
-                            type="number"
-                            id="fontSize"
-                            aria-label="Yazı tipi boyutu"
-                            value={settings.fontSize}
-                            onChange={(e) => handleSettingChange('fontSize', parseInt(e.target.value))}
-                            className="w-16 border-slate-300 rounded-md shadow-sm text-sm p-1.5 focus:ring-blue-500 focus:border-blue-500"
-                        />
+                        <i className="fas fa-text-height text-text-secondary mr-2"></i>
+                        <input type="number" id="fontSize" value={settings.fontSize} onChange={(e) => handleSettingChange('fontSize', parseInt(e.target.value))} className="w-16 border-slate-300 rounded-md shadow-sm text-sm p-1.5"/>
                     </div>
-                    
                     <div className="flex items-center" title="Yazı Tipi Ailesi">
-                        <i className="fas fa-font text-slate-500 mr-2"></i>
-                        <select 
-                            id="fontFamily" 
-                            aria-label="Yazı tipi ailesi"
-                            value={settings.fontFamily} 
-                            onChange={(e) => handleSettingChange('fontFamily', e.target.value as 'Inter' | 'Atkinson Hyperlegible')}
-                            className="border-slate-300 rounded-md shadow-sm text-sm p-1.5 focus:ring-blue-500 focus:border-blue-500"
-                        >
+                        <i className="fas fa-font text-text-secondary mr-2"></i>
+                        <select id="fontFamily" value={settings.fontFamily} onChange={(e) => handleSettingChange('fontFamily', e.target.value as 'Inter' | 'Atkinson Hyperlegible')} className="border-slate-300 rounded-md shadow-sm text-sm p-1.5">
                             <option value="Inter">Normal</option>
                             <option value="Atkinson Hyperlegible">Disleksi Dostu</option>
                         </select>
                     </div>
-                    
                     <div className="flex items-center" title="Sütun Sayısı">
-                        <i className="fas fa-columns text-slate-500 mr-2"></i>
+                        <i className="fas fa-columns text-text-secondary mr-2"></i>
                         <div className="flex items-center rounded-md shadow-sm border border-slate-300">
-                            <button onClick={() => handleSettingChange('columns', 1)} className={`px-3 py-1 text-sm rounded-l-md transition ${settings.columns === 1 ? 'bg-blue-600 text-white' : 'bg-white hover:bg-slate-100'}`} aria-pressed={settings.columns === 1}>1</button>
-                            <button onClick={() => handleSettingChange('columns', 2)} className={`px-3 py-1 text-sm rounded-r-md border-l border-slate-300 transition ${settings.columns === 2 ? 'bg-blue-600 text-white' : 'bg-white hover:bg-slate-100'}`} aria-pressed={settings.columns === 2}>2</button>
+                            <button onClick={() => handleSettingChange('columns', 1)} className={`px-3 py-1 text-sm rounded-l-md transition ${settings.columns === 1 ? 'bg-primary-600 text-white' : 'bg-surface hover:bg-slate-100'}`}>1</button>
+                            <button onClick={() => handleSettingChange('columns', 2)} className={`px-3 py-1 text-sm rounded-r-md border-l border-slate-300 transition ${settings.columns === 2 ? 'bg-primary-600 text-white' : 'bg-surface hover:bg-slate-100'}`}>2</button>
                         </div>
                     </div>
                 </div>
-                
-                {/* Divider */}
-                <div className="h-6 w-px bg-slate-300 hidden lg:block"></div>
-
-                {/* Section 2: Görünürlük */}
-                <div className="flex items-center gap-2">
-                    <ToggleButton 
-                        labelOn="Cevaplar Görünür" labelOff="Cevaplar Gizli" 
-                        iconOn="fa-eye" iconOff="fa-eye-slash" 
-                        isOn={!settings.hideAnswers} 
-                        onClick={() => handleSettingChange('hideAnswers', !settings.hideAnswers)} 
-                    />
-                    <ToggleButton 
-                        labelOn="Detaylar Görünür" labelOff="Detaylar Gizli" 
-                        iconOn="fa-info-circle" iconOff="fa-eye-slash" 
-                        isOn={!settings.hideDetails} 
-                        onClick={() => handleSettingChange('hideDetails', !settings.hideDetails)} 
-                    />
-                    <ToggleButton 
-                        labelOn="Kenarlık Var" labelOff="Kenarlık Yok" 
-                        iconOn="fa-border-all" iconOff="fa-border-none" 
-                        isOn={settings.showBorders} 
-                        onClick={() => handleSettingChange('showBorders', !settings.showBorders)} 
-                    />
-                </div>
             </div>
+        </div>
+    );
+};
 
-            {/* Sağ: Eylemler */}
-            <div className="flex items-center gap-2">
-                <ActionButton label="Arşive Kaydet" icon="fa-save" onClick={onSaveToArchive} className="bg-white text-slate-600 hover:bg-slate-100 border border-slate-300"/>
-                <ActionButton label="Yazdır" icon="fa-print" onClick={onPrint} className="bg-slate-600 text-white hover:bg-slate-700"/>
-                <ActionButton label={isPdfProcessing ? 'İşleniyor...' : 'PDF İndir'} icon={isPdfProcessing ? 'fa-spinner fa-spin' : 'fa-file-pdf'} onClick={onDownloadPdf} disabled={isPdfProcessing} className="bg-blue-600 text-white hover:bg-blue-700"/>
+
+const WorksheetHeader: React.FC<{ questions: Question[] }> = ({ questions }) => {
+    if (!questions || questions.length === 0) return null;
+
+    const firstQuestion = questions[0];
+    const grade = firstQuestion.sinif;
+
+    const uniqueUnits = [...new Map(questions.map(q => [q.unite_no, q.unite_adi])).values()].join(', ');
+    
+    return (
+        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 mb-8 text-sm break-inside-avoid">
+            <h2 className="text-lg font-bold text-text-primary mb-2">{grade}. Sınıf Türkçe</h2>
+            <div className="space-y-2">
+                <p><strong className="font-semibold text-text-secondary">Üniteler:</strong> {uniqueUnits}</p>
+                <div>
+                    <strong className="font-semibold text-text-secondary">Kazanımlar:</strong>
+                    <ul className="list-disc list-inside ml-2 mt-1 space-y-1">
+                        {[...new Map(questions.map(item => [item.kazanim_kodu, item.kazanim_metni])).entries()].map(([code, text]) => (
+                            <li key={code} className="text-text-secondary">{code} {text}</li>
+                        ))}
+                    </ul>
+                </div>
             </div>
         </div>
     );
@@ -166,20 +174,17 @@ const QuestionPreview: React.FC<{
   };
 
   return (
-    <div className={`bg-white text-left mb-6 break-inside-avoid ${settings.showBorders ? 'border border-gray-200 rounded-lg p-6 shadow-sm' : 'p-2'}`}>
-        {/* Header */}
-        <div className="mb-4 border-b border-gray-200 pb-3">
-            <p className="text-sm font-semibold text-blue-700">{question.sinif}. Sınıf &bull; {question.unite_adi}</p>
-            <p className="text-xs text-gray-500 mt-1">{question.kazanim_kodu} {question.kazanim_metni}</p>
-        </div>
-        
+    <div className={`bg-surface text-left mb-6 break-inside-avoid ${settings.showBorders ? 'border border-border rounded-lg p-6 shadow-sm' : 'p-2'}`}>
         {/* Paragraph */}
         {question.paragraf_metni && (
-            <p className="mb-5 p-4 bg-slate-50 border-l-4 border-slate-300 text-gray-800 leading-relaxed text-base">{question.paragraf_metni}</p>
+            <p className="mb-5 p-4 bg-slate-50 border-l-4 border-slate-300 text-text-primary leading-relaxed text-base">{question.paragraf_metni}</p>
         )}
         
         {/* Question Text */}
-        <p className="font-bold text-lg text-gray-900 mb-5 leading-snug">{question.soru_metni}</p>
+        <p className="font-bold text-lg text-text-primary mb-5 leading-snug">
+             {settings.showQuestionNumbers && <strong className="mr-2">{index + 1}.</strong>}
+            {question.soru_metni}
+        </p>
         
         {/* Multiple Choice Options */}
         {question.soru_tipi === 'coktan_secmeli' && question.secenekler && (
@@ -187,8 +192,8 @@ const QuestionPreview: React.FC<{
                 {Object.entries(question.secenekler).map(([key, value]) => (
                     <div key={key} className={`flex items-start p-3 border rounded-lg transition-colors text-base correct-answer-indicator
                         ${key === question.dogru_cevap 
-                            ? 'bg-green-50 border-green-400 text-green-900 font-medium' 
-                            : 'bg-gray-50 border-gray-200 text-gray-800 hover:bg-gray-100 hover:border-gray-300'}`
+                            ? 'bg-success-50 border-success-400 text-success-900 font-medium' 
+                            : 'bg-gray-50 border-gray-200 text-text-primary hover:bg-gray-100 hover:border-gray-300'}`
                         }
                     >
                         <span className="font-bold mr-3">{key})</span> 
@@ -203,8 +208,8 @@ const QuestionPreview: React.FC<{
              <div className="mt-4">
                 <p className={`font-semibold p-3 border rounded-lg inline-block correct-answer-indicator-text
                     ${question.dogru_cevap === 'Doğru' 
-                        ? 'bg-green-50 border-green-400 text-green-900' 
-                        : 'bg-red-50 border-red-400 text-red-900'}`
+                        ? 'bg-success-50 border-success-400 text-success-900' 
+                        : 'bg-danger-50 border-danger-400 text-danger-900'}`
                 }>
                     Doğru Cevap: {question.dogru_cevap}
                 </p>
@@ -214,46 +219,46 @@ const QuestionPreview: React.FC<{
         {/* Fill in the blank Answer */}
         {question.soru_tipi === 'bosluk_doldurma' && (
             <div className="mt-4">
-                <p className="font-semibold p-3 border rounded-lg bg-green-50 border-green-400 text-green-900 inline-block correct-answer-indicator-text">
+                <p className="font-semibold p-3 border rounded-lg bg-success-50 border-success-400 text-success-900 inline-block correct-answer-indicator-text">
                     Doğru Cevap: {question.dogru_cevap}
                 </p>
             </div>
         )}
 
         {/* Details section */}
-        <div className="mt-6 pt-4 border-t border-gray-200">
+        <div className="mt-6 pt-4 border-t border-border">
             <details open>
-                <summary className="cursor-pointer text-sm font-semibold text-gray-600 hover:text-gray-900">
+                <summary className="cursor-pointer text-sm font-semibold text-text-secondary hover:text-text-primary">
                     Çözüm ve Pedagojik Detaylar <i className="fas fa-chevron-down fa-xs ml-1"></i>
                 </summary>
-                <div className="mt-3 text-sm space-y-3 p-4 bg-blue-50/50 rounded-md border border-blue-100">
-                    <p><strong className="font-semibold text-gray-800">Çözüm Anahtarı:</strong> <span className="text-gray-700">{question.cozum_anahtari}</span></p>
-                    <p><strong className="font-semibold text-gray-800">Gerçek Yaşam Bağlantısı:</strong> <span className="text-gray-700">{question.gercek_yasam_baglantisi}</span></p>
+                <div className="mt-3 text-sm space-y-3 p-4 bg-primary-100/50 rounded-md border border-primary-100">
+                    <p><strong className="font-semibold text-text-primary">Çözüm Anahtarı:</strong> <span className="text-text-secondary">{question.cozum_anahtari}</span></p>
+                    <p><strong className="font-semibold text-text-primary">Gerçek Yaşam Bağlantısı:</strong> <span className="text-text-secondary">{question.gercek_yasam_baglantisi}</span></p>
                 </div>
             </details>
         </div>
         
         {/* Feedback section */}
-        <div className="no-print mt-4 pt-4 border-t border-gray-200 flex justify-end items-center relative">
+        <div className="no-print mt-4 pt-4 border-t border-border flex justify-end items-center relative">
             {feedbackStatus ? (
                 <span className="text-sm font-medium text-green-600"><i className="fas fa-check-circle mr-2"></i>Değerlendirmeniz için teşekkürler!</span>
             ) : (
                 <div>
                     <button 
                         onClick={() => setIsPopoverOpen(!isPopoverOpen)}
-                        className="text-sm text-gray-600 hover:text-blue-600 font-medium py-1 px-3 rounded-md bg-gray-100 hover:bg-gray-200 transition-colors"
+                        className="text-sm text-text-secondary hover:text-primary-600 font-medium py-1 px-3 rounded-md bg-gray-100 hover:bg-gray-200 transition-colors"
                     >
                         <i className="fas fa-star mr-2"></i> Soruyu Değerlendir
                     </button>
                     {isPopoverOpen && (
-                        <div className="absolute bottom-full right-0 mb-2 w-48 bg-white rounded-lg shadow-xl border z-10">
-                            <button onClick={() => handleFeedbackClick('harika')} className="w-full text-left flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-800">
+                        <div className="absolute bottom-full right-0 mb-2 w-48 bg-surface rounded-lg shadow-xl border z-10">
+                            <button onClick={() => handleFeedbackClick('harika')} className="w-full text-left flex items-center px-4 py-2 text-sm text-text-primary hover:bg-green-50 hover:text-green-800">
                                 <i className="fas fa-thumbs-up fa-fw mr-3 text-green-500"></i> Harika
                             </button>
-                            <button onClick={() => handleFeedbackClick('duzeltilmeli')} className="w-full text-left flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 hover:text-yellow-800">
+                            <button onClick={() => handleFeedbackClick('duzeltilmeli')} className="w-full text-left flex items-center px-4 py-2 text-sm text-text-primary hover:bg-yellow-50 hover:text-yellow-800">
                                 <i className="fas fa-pencil fa-fw mr-3 text-yellow-500"></i> Düzeltilmeli
                             </button>
-                            <button onClick={() => handleFeedbackClick('ise_yaramaz')} className="w-full text-left flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-800">
+                            <button onClick={() => handleFeedbackClick('ise_yaramaz')} className="w-full text-left flex items-center px-4 py-2 text-sm text-text-primary hover:bg-red-50 hover:text-red-800">
                                 <i className="fas fa-thumbs-down fa-fw mr-3 text-red-500"></i> İşe Yaramaz
                             </button>
                         </div>
@@ -284,6 +289,10 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
       hideAnswers: false,
       hideDetails: false,
       showBorders: true,
+      showQuestionNumbers: true,
+      showWorksheetHeader: true,
+      showExamTitle: true,
+      examTitle: 'Türkçe Dersi Çalışma Kağıdı',
   });
 
   const jsonString = JSON.stringify(questions, null, 2);
@@ -368,7 +377,7 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
     printSettings.fontFamily === 'Atkinson Hyperlegible' ? 'font-atkinson-hyperlegible' : 'font-inter',
     printSettings.hideAnswers ? 'answer-hidden' : '',
     printSettings.hideDetails ? 'details-hidden' : '',
-    'bg-white', // PDF için beyaz arka planı garantile
+    'bg-surface', // PDF için beyaz arka planı garantile
   ].join(' ');
   
   const printAreaStyles: React.CSSProperties = {
@@ -379,17 +388,17 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
 
   return (
     <div className="w-full">
-      <div className="no-print mb-4 border-b border-gray-200">
+      <div className="no-print mb-4 border-b border-border">
         <nav className="-mb-px flex space-x-4" aria-label="Tabs">
           <button
             onClick={() => setActiveTab('preview')}
-            className={`${activeTab === 'preview' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm`}
+            className={`${activeTab === 'preview' ? 'border-primary-500 text-primary-600' : 'border-transparent text-text-secondary hover:text-text-primary hover:border-gray-300'} whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm`}
           >
             Önizleme
           </button>
           <button
             onClick={() => setActiveTab('json')}
-            className={`${activeTab === 'json' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'} whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm`}
+            className={`${activeTab === 'json' ? 'border-primary-500 text-primary-600' : 'border-transparent text-text-secondary hover:text-text-primary hover:border-gray-300'} whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm`}
           >
             JSON
           </button>
@@ -408,6 +417,10 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
                 isPdfProcessing={isProcessingPdf}
             />
             <div id="print-area" ref={printAreaRef} className={printAreaClasses} style={printAreaStyles}>
+              {printSettings.showExamTitle && printSettings.examTitle && (
+                  <h1 className="text-2xl font-bold text-center mb-6 break-after-avoid">{printSettings.examTitle}</h1>
+              )}
+              {printSettings.showWorksheetHeader && <WorksheetHeader questions={questions} />}
               {questions.map((q, index) => (
                   <QuestionPreview 
                     key={index} 

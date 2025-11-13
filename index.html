@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="tr" class="theme-sky">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -22,7 +22,7 @@
 }
 </script>
 <style>
-  /* Inter Font (from official source) */
+  /* Inter Font */
   @font-face {
     font-family: 'Inter'; font-style: normal; font-weight: 400; font-display: swap;
     src: url("https://rsms.me/inter/font-files/Inter-Regular.woff2?v=3.19") format("woff2");
@@ -39,70 +39,105 @@
     font-family: 'Inter'; font-style: normal; font-weight: 700; font-display: swap;
     src: url("https://rsms.me/inter/font-files/Inter-Bold.woff2?v=3.19") format("woff2");
   }
+  
+  :root {
+      /* Varsayılan (Slate) Tema Renkleri */
+      --color-background: 248 250 252; /* slate-50 */
+      --color-surface: 255 255 255; /* white */
+      --color-primary-100: 226 232 240; --color-primary-600: 71 85 105; --color-primary-700: 51 65 85;
+      --color-text-primary: 30 41 59; /* slate-800 */
+      --color-text-secondary: 71 85 105; /* slate-600 */
+      --color-border: 226 232 240; /* slate-200 */
+      --color-ring: 100 116 139; /* slate-500 */
 
-  /* Atkinson Hyperlegible is loaded via Google Fonts link */
+      --color-success-50: 240 253 244; --color-success-400: 74 222 128; --color-success-900: 22 101 52;
+      --color-danger-50: 254 242 242; --color-danger-400: 248 113 113; --color-danger-900: 127 29 29;
+  }
+  
+  .theme-sky {
+    --color-primary-100: 224 242 254; --color-primary-600: 2 132 199; --color-primary-700: 3 105 161; --color-ring: 59 130 246;
+  }
+  .theme-emerald {
+    --color-primary-100: 236 253 245; --color-primary-600: 16 185 129; --color-primary-700: 5 150 105; --color-ring: 34 197 94;
+  }
+  .theme-rose {
+    --color-primary-100: 255 241 242; --color-primary-600: 225 29 72; --color-primary-700: 190 18 60; --color-ring: 244 63 94;
+  }
+  .theme-indigo {
+    --color-primary-100: 238 242 255; --color-primary-600: 79 70 229; --color-primary-700: 67 56 202; --color-ring: 99 102 241;
+  }
+  .theme-slate { /* Varsayılan ile aynı */ }
 
-  body {
-    font-family: 'Inter', sans-serif;
-  }
-  .font-inter {
-    font-family: 'Inter', sans-serif;
-  }
-  .font-atkinson-hyperlegible {
-    font-family: 'Atkinson Hyperlegible', sans-serif;
-  }
+  /* Tailwind'in bu değişkenleri kullanmasını sağlayan yardımcı sınıflar */
+  .bg-background { background-color: rgb(var(--color-background)); }
+  .bg-surface { background-color: rgb(var(--color-surface)); }
+  .bg-primary-100 { background-color: rgb(var(--color-primary-100)); }
+  .bg-primary-600 { background-color: rgb(var(--color-primary-600)); }
+  .hover\:bg-primary-700:hover { background-color: rgb(var(--color-primary-700)); }
+  .disabled\:bg-primary-300:disabled { background-color: rgba(var(--color-primary-600), 0.4); }
+  
+  .text-primary-600 { color: rgb(var(--color-primary-600)); }
+  .text-primary-700 { color: rgb(var(--color-primary-700)); }
+  .hover\:text-primary-600:hover { color: rgb(var(--color-primary-600)); }
+  .text-text-primary { color: rgb(var(--color-text-primary)); }
+  .text-text-secondary { color: rgb(var(--color-text-secondary)); }
+  
+  .border-border { border-color: rgb(var(--color-border)); }
+  .focus\:ring-primary-500:focus { --tw-ring-color: rgb(var(--color-ring)); }
+  .focus\:border-primary-500:focus { border-color: rgb(var(--color-ring)); }
+
+  .bg-success-50 { background-color: rgb(var(--color-success-50)); }
+  .border-success-400 { border-color: rgb(var(--color-success-400)); }
+  .text-success-900 { color: rgb(var(--color-success-900)); }
+  .bg-danger-50 { background-color: rgb(var(--color-danger-50)); }
+  .border-danger-400 { border-color: rgb(var(--color-danger-400)); }
+  .text-danger-900 { color: rgb(var(--color-danger-900)); }
+
+  .ring-primary-500 { --tw-ring-color: rgb(var(--color-ring)); }
+  .text-primary-active { color: rgb(var(--color-primary-600)); }
+  .border-primary-500 { border-color: rgb(var(--color-ring)); }
+  
+  /* Diğer Stiller */
+  body { font-family: 'Inter', sans-serif; }
+  .font-inter { font-family: 'Inter', sans-serif; }
+  .font-atkinson-hyperlegible { font-family: 'Atkinson Hyperlegible', sans-serif; }
+  
   @media print {
-    body * {
-      visibility: hidden;
-    }
-    #print-area, #print-area * {
-      visibility: visible;
-    }
-    #print-area {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-    }
-    .no-print {
-      display: none !important;
-    }
+    body * { visibility: hidden; }
+    #print-area, #print-area * { visibility: visible; }
+    #print-area { position: absolute; left: 0; top: 0; width: 100%; }
+    .no-print { display: none !important; }
     .answer-hidden .correct-answer-indicator {
-        background-color: #f9fafb !important; /* bg-gray-50 */
-        border-color: #e5e7eb !important; /* border-gray-200 */
-        color: #1f2937 !important; /* text-gray-800 */
-        font-weight: 400 !important;
+        background-color: #f9fafb !important; border-color: #e5e7eb !important;
+        color: #1f2937 !important; font-weight: 400 !important;
     }
-    .details-hidden details {
-      display: none;
-    }
+    .details-hidden details { display: none; }
   }
-  .details-hidden details {
-      display: none;
-  }
+  .details-hidden details { display: none; }
   .answer-hidden .correct-answer-indicator {
-      background-color: #f9fafb !important;
-      border-color: #e5e7eb !important;
-      color: #1f2937 !important;
-      font-weight: 400 !important;
+      background-color: #f9fafb !important; border-color: #e5e7eb !important;
+      color: #1f2937 !important; font-weight: 400 !important;
   }
    .answer-hidden .correct-answer-indicator-text {
-      background-color: #f9fafb !important;
-      border-color: #e5e7eb !important;
+      background-color: #f9fafb !important; border-color: #e5e7eb !important;
       color: #1f2937 !important;
   }
+  
   @keyframes fade-in-out {
     0% { opacity: 0; transform: translateY(-20px); }
     15% { opacity: 1; transform: translateY(0); }
     85% { opacity: 1; transform: translateY(0); }
     100% { opacity: 0; transform: translateY(-20px); }
   }
-  .animate-fade-in-out {
-      animation: fade-in-out 3s ease-in-out forwards;
-  }
+  .animate-fade-in-out { animation: fade-in-out 3s ease-in-out forwards; }
+  
+  details > summary { list-style: none; }
+  details > summary::-webkit-details-marker { display: none; }
+  
+  .rotate-90-on-open[open] > summary svg { transform: rotate(90deg); }
 </style>
 </head>
-  <body class="bg-gray-50">
+  <body class="bg-background">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
