@@ -110,7 +110,7 @@ const CurriculumSelector: React.FC<{
             
             {activeUnit && (
                  <div
-                    className="absolute top-0 left-full ml-2 w-96 z-20 transition-opacity duration-200 animate-fade-in"
+                    className="absolute top-0 left-full ml-2 w-96 z-40 transition-opacity duration-200 animate-fade-in"
                     style={{ minHeight: '100%' }}
                     onMouseEnter={handlePanelMouseEnter}
                 >
