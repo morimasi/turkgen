@@ -30,14 +30,14 @@ export const generateQuestions = async (params: QuestionGenerationParams): Promi
   }
 };
 
-export const generateImage = async (prompt: string): Promise<string> => {
+export const generateImage = async (prompt: string, quality: 'high' | 'fast'): Promise<string> => {
     try {
         const response = await fetch('/api/generateImage', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ prompt }),
+            body: JSON.stringify({ prompt, quality }),
         });
 
         if (!response.ok) {

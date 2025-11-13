@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import type { Question, PrintSettings } from '../types';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -160,6 +160,107 @@ const WorksheetHeader: React.FC<{ questions: Question[] }> = ({ questions }) => 
     );
 };
 
+// --- GÖRSEL AYARLARI ---
+type ImageStyle = 'Çizgi Film' | 'Gerçekçi' | 'Suluboya' | 'Çizgi Roman';
+type ImagePalette = 'Canlı Renkler' | 'Pastel Tonlar' | 'Siyah-Beyaz';
+type ImageQuality = 'high' | 'fast';
+
+interface ImageSettings {
+    style: ImageStyle;
+    palette: ImagePalette;
+    quality: ImageQuality;
+}
+
+const PopoverRadioGroup: React.FC<{
+    label: string;
+    options: string[];
+    selectedValue: string;
+    onChange: (value: any) => void;
+}> = ({ label, options, selectedValue, onChange }) => (
+    <div>
+        <label className="block text-xs font-semibold text-text-secondary mb-2">{label}</label>
+        <div className="flex items-center gap-2">
+            {options.map(option => (
+                <button
+                    key={option}
+                    onClick={() => onChange(option)}
+                    className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${
+                        selectedValue === option
+                            ? 'bg-primary-600 text-on-primary border-primary-600'
+                            : 'bg-surface text-text-secondary hover:bg-worksheet-surface border-border'
+                    }`}
+                >
+                    {option}
+                </button>
+            ))}
+        </div>
+    </div>
+);
+
+const ImageSettingsPopover: React.FC<{
+    isOpen: boolean;
+    onClose: () => void;
+    onGenerate: (settings: ImageSettings) => void;
+    settings: ImageSettings;
+    setSettings: React.Dispatch<React.SetStateAction<ImageSettings>>;
+    anchorRef: React.RefObject<HTMLDivElement>;
+}> = ({ isOpen, onClose, onGenerate, settings, setSettings, anchorRef }) => {
+    const popoverRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (
+                isOpen &&
+                popoverRef.current &&
+                !popoverRef.current.contains(event.target as Node) &&
+                anchorRef.current &&
+                !anchorRef.current.contains(event.target as Node)
+            ) {
+                onClose();
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isOpen, onClose, anchorRef]);
+
+    if (!isOpen) return null;
+
+    return (
+        <div ref={popoverRef} className="absolute bottom-full right-0 mb-2 w-72 z-20 bg-surface rounded-lg shadow-xl border border-border p-4 animate-scale-in">
+            <div className="flex justify-between items-center mb-4">
+                <h4 className="text-sm font-bold text-text-primary">Görsel Ayarları</h4>
+                <button onClick={onClose} className="text-text-secondary hover:text-text-primary">&times;</button>
+            </div>
+            <div className="space-y-4">
+                <PopoverRadioGroup
+                    label="Stil"
+                    options={['Çizgi Film', 'Gerçekçi', 'Suluboya', 'Çizgi Roman']}
+                    selectedValue={settings.style}
+                    onChange={(value) => setSettings(s => ({ ...s, style: value }))}
+                />
+                 <PopoverRadioGroup
+                    label="Renk Paleti"
+                    options={['Canlı Renkler', 'Pastel Tonlar', 'Siyah-Beyaz']}
+                    selectedValue={settings.palette}
+                    onChange={(value) => setSettings(s => ({ ...s, palette: value }))}
+                />
+                 <PopoverRadioGroup
+                    label="Kalite ve Hız"
+                    options={['Yüksek', 'Hızlı']}
+                    selectedValue={settings.quality === 'high' ? 'Yüksek' : 'Hızlı'}
+                    onChange={(value) => setSettings(s => ({ ...s, quality: value === 'Yüksek' ? 'high' : 'fast' }))}
+                />
+            </div>
+             <button
+                onClick={() => onGenerate(settings)}
+                className="w-full mt-5 flex justify-center items-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-on-primary bg-primary-600 hover:bg-primary-700"
+            >
+                <i className="fas fa-magic mr-2"></i> Oluştur
+            </button>
+        </div>
+    );
+};
+
 
 const QuestionPreview: React.FC<{ 
     question: Question; 
@@ -167,17 +268,50 @@ const QuestionPreview: React.FC<{
     index: number;
     onFeedback: (index: number, feedback: string) => void;
     feedbackStatus?: string;
-    onGenerateImage: (index: number, question: Question) => void;
+    onGenerateImage: (index: number, prompt: string, quality: ImageQuality) => void;
     generatedImage?: string;
     isImageLoading?: boolean;
     className?: string;
     style?: React.CSSProperties;
 }> = ({ question, settings, index, onFeedback, feedbackStatus, onGenerateImage, generatedImage, isImageLoading, className = '', style }) => {
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [isFeedbackPopoverOpen, setIsFeedbackPopoverOpen] = useState(false);
+  const [isImageSettingsOpen, setIsImageSettingsOpen] = useState(false);
+  const [imageSettings, setImageSettings] = useState<ImageSettings>({
+      style: 'Çizgi Film',
+      palette: 'Canlı Renkler',
+      quality: 'high',
+  });
+  const imageButtonRef = useRef<HTMLDivElement>(null);
+
   
   const handleFeedbackClick = (feedback: string) => {
     onFeedback(index, feedback);
-    setIsPopoverOpen(false);
+    setIsFeedbackPopoverOpen(false);
+  };
+  
+  const constructImagePrompt = (baseText: string, settings: ImageSettings): string => {
+    let promptParts: string[] = [];
+    switch (settings.style) {
+        case 'Çizgi Film': promptParts.push("Çocukların seveceği, neşeli bir çizgi film tarzında, basit ve net hatlarla,"); break;
+        case 'Gerçekçi': promptParts.push("Yüksek detaylı, fotogerçekçi bir tarzda,"); break;
+        case 'Suluboya': promptParts.push("Yumuşak renk geçişlerine sahip, estetik bir suluboya resim tarzında,"); break;
+        case 'Çizgi Roman': promptParts.push("Canlı ve dinamik bir çizgi roman paneli gibi, belirgin dış hatlarla,"); break;
+    }
+    switch (settings.palette) {
+        case 'Canlı Renkler': promptParts.push("canlı ve parlak renkler kullanarak"); break;
+        case 'Pastel Tonlar': promptParts.push("yumuşak ve dinlendirici pastel tonlar kullanarak"); break;
+        case 'Siyah-Beyaz': promptParts.push("siyah-beyaz tonlarda, ışık ve gölge oyunlarını vurgulayarak"); break;
+    }
+    return `${promptParts.join(' ')} şu metni anlatan bir illüstrasyon oluştur: "${baseText}"`;
+  };
+
+  const handleStartImageGeneration = (selectedSettings: ImageSettings) => {
+    const baseText = question.paragraf_metni || question.soru_metni;
+    if (!baseText) return;
+
+    const finalPrompt = constructImagePrompt(baseText, selectedSettings);
+    onGenerateImage(index, finalPrompt, selectedSettings.quality);
+    setIsImageSettingsOpen(false);
   };
 
   const combinedClasses = `bg-surface text-left mb-6 break-inside-avoid ${settings.showBorders ? 'border border-border rounded-lg p-6 shadow-sm' : 'p-2'} ${className}`;
@@ -213,20 +347,29 @@ const QuestionPreview: React.FC<{
                  {settings.showQuestionNumbers && <strong className="mr-2">{index + 1}.</strong>}
                 {question.soru_metni}
             </p>
-            {/* We only want the button if there's content to visualize */}
             {(question.paragraf_metni) && !generatedImage && (
-                <button 
-                    onClick={() => onGenerateImage(index, question)}
-                    disabled={isImageLoading}
-                    className="no-print ml-4 flex-shrink-0 flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md transition-colors shadow-sm bg-surface text-text-secondary hover:bg-worksheet-surface border border-border disabled:opacity-50 disabled:cursor-wait"
-                    title="Soru için görsel oluştur"
-                >
-                    {isImageLoading ? (
-                        <><i className="fas fa-spinner fa-spin fa-fw"></i><span>Oluşturuluyor...</span></>
-                    ) : (
-                        <><i className="fas fa-magic fa-fw"></i><span>Görselleştir</span></>
-                    )}
-                </button>
+                 <div ref={imageButtonRef} className="no-print ml-4 flex-shrink-0 relative">
+                     <button 
+                        onClick={() => setIsImageSettingsOpen(prev => !prev)}
+                        disabled={isImageLoading}
+                        className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md transition-colors shadow-sm bg-surface text-text-secondary hover:bg-worksheet-surface border border-border disabled:opacity-50 disabled:cursor-wait"
+                        title="Soru için görsel oluştur"
+                    >
+                        {isImageLoading ? (
+                            <><i className="fas fa-spinner fa-spin fa-fw"></i><span>Oluşturuluyor...</span></>
+                        ) : (
+                            <><i className="fas fa-magic fa-fw"></i><span>Görselleştir</span></>
+                        )}
+                    </button>
+                     <ImageSettingsPopover
+                        isOpen={isImageSettingsOpen}
+                        onClose={() => setIsImageSettingsOpen(false)}
+                        onGenerate={handleStartImageGeneration}
+                        settings={imageSettings}
+                        setSettings={setImageSettings}
+                        anchorRef={imageButtonRef}
+                    />
+                 </div>
             )}
         </div>
         
@@ -293,12 +436,12 @@ const QuestionPreview: React.FC<{
             ) : (
                 <div>
                     <button 
-                        onClick={() => setIsPopoverOpen(!isPopoverOpen)}
+                        onClick={() => setIsFeedbackPopoverOpen(!isFeedbackPopoverOpen)}
                         className="text-sm text-text-secondary hover:text-primary-600 font-medium py-1 px-3 rounded-md bg-worksheet-surface hover:opacity-80 transition-colors"
                     >
                         <i className="fas fa-star mr-2"></i> Soruyu Değerlendir
                     </button>
-                    {isPopoverOpen && (
+                    {isFeedbackPopoverOpen && (
                         <div className="absolute bottom-full right-0 mb-2 w-48 bg-surface rounded-lg shadow-xl border z-10 animate-scale-in">
                             <button onClick={() => handleFeedbackClick('harika')} className="w-full text-left flex items-center px-4 py-2 text-sm text-text-primary hover:bg-green-50 hover:text-green-800">
                                 <i className="fas fa-thumbs-up fa-fw mr-3 text-green-500"></i> Harika
@@ -333,14 +476,12 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
     setFeedback(prev => ({ ...prev, [questionIndex]: rating }));
   };
 
-  const handleGenerateImage = async (questionIndex: number, question: Question) => {
+  const handleGenerateImage = async (questionIndex: number, prompt: string, quality: 'high' | 'fast') => {
     if (imageLoadingStates[questionIndex]) return;
 
     setImageLoadingStates(prev => ({ ...prev, [questionIndex]: true }));
     try {
-        const prompt = `Aşağıdaki metni anlatan, çocukların seveceği, renkli ve basit bir çizgi film tarzında illüstrasyon oluştur. Metin: "${question.paragraf_metni || question.soru_metni}"`;
-        
-        const base64Image = await generateImage(prompt);
+        const base64Image = await generateImage(prompt, quality);
         setGeneratedImages(prev => ({ ...prev, [questionIndex]: base64Image }));
     } catch (error) {
         console.error("Görsel oluşturulamadı:", error);
