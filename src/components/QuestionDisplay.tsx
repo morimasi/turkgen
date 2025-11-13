@@ -502,7 +502,7 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions, set
   const [printSettings, setPrintSettings] = useState<PrintSettings>({
       fontSize: 12,
       fontFamily: 'Inter',
-      columns: 1,
+      columns: 2,
       hideAnswers: false,
       hideDetails: false,
       showBorders: true,
