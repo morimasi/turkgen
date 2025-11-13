@@ -160,20 +160,14 @@
     #print-area { position: absolute; left: 0; top: 0; width: 100%; }
     .no-print { display: none !important; }
     .answer-hidden .correct-answer-indicator {
-        background-color: #f9fafb !important; border-color: #e5e7eb !important;
-        color: #1f2937 !important; font-weight: 400 !important;
+        background-color: var(--color-surface) !important; 
+        border-color: var(--color-border) !important;
+        color: var(--color-text-primary) !important; 
+        font-weight: 400 !important;
     }
     .details-hidden details { display: none; }
   }
   .details-hidden details { display: none; }
-  .answer-hidden .correct-answer-indicator {
-      background-color: #f9fafb !important; border-color: #e5e7eb !important;
-      color: #1f2937 !important; font-weight: 400 !important;
-  }
-   .answer-hidden .correct-answer-indicator-text {
-      background-color: #f9fafb !important; border-color: #e5e7eb !important;
-      color: #1f2937 !important;
-  }
   
   @keyframes fade-in-out {
     0% { opacity: 0; transform: translateY(-20px); }

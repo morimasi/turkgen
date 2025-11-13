@@ -141,8 +141,8 @@ const WorksheetHeader: React.FC<{ questions: Question[] }> = ({ questions }) => 
     const uniqueUnits = [...new Map(questions.map(q => [q.unite_no, q.unite_adi])).values()].join(', ');
     
     return (
-        <div className="border-2 border-dashed border-border rounded-lg p-4 mb-8 text-sm break-inside-avoid">
-            <h2 className="text-lg font-bold text-text-primary mb-2">{grade}. Sınıf Türkçe</h2>
+        <div className="border-2 border-dashed border-border rounded-lg p-4 mb-8 break-inside-avoid">
+            <h2 className="font-bold text-text-primary mb-2">{grade}. Sınıf Türkçe</h2>
             <div className="space-y-2">
                 <p><strong className="font-semibold text-text-secondary">Üniteler:</strong> {uniqueUnits}</p>
                 <div>
@@ -177,11 +177,11 @@ const QuestionPreview: React.FC<{
     <div className={`bg-surface text-left mb-6 break-inside-avoid ${settings.showBorders ? 'border border-border rounded-lg p-6 shadow-sm' : 'p-2'}`}>
         {/* Paragraph */}
         {question.paragraf_metni && (
-            <p className="mb-5 p-4 bg-background border-l-4 border-border text-text-primary leading-relaxed text-base">{question.paragraf_metni}</p>
+            <p className="mb-5 p-4 bg-background border-l-4 border-border text-text-primary leading-relaxed">{question.paragraf_metni}</p>
         )}
         
         {/* Question Text */}
-        <p className="font-bold text-lg text-text-primary mb-5 leading-snug">
+        <p className="font-bold text-text-primary mb-5 leading-snug">
              {settings.showQuestionNumbers && <strong className="mr-2">{index + 1}.</strong>}
             {question.soru_metni}
         </p>
@@ -189,24 +189,28 @@ const QuestionPreview: React.FC<{
         {/* Multiple Choice Options */}
         {question.soru_tipi === 'coktan_secmeli' && question.secenekler && (
             <div className="space-y-3">
-                {Object.entries(question.secenekler).map(([key, value]) => (
-                    <div key={key} className={`flex items-start p-3 border rounded-lg transition-colors text-base correct-answer-indicator
-                        ${key === question.dogru_cevap 
-                            ? 'bg-success-50 border-success-400 text-success-900 font-medium' 
-                            : 'bg-surface border-border text-text-primary hover:bg-worksheet-surface'}`
-                        }
-                    >
-                        <span className="font-bold mr-3">{key})</span> 
-                        <span className="flex-1">{value}</span>
-                    </div>
-                ))}
+                {Object.entries(question.secenekler).map(([key, value]) => {
+                     const isCorrect = key === question.dogru_cevap;
+                     const optionClasses = settings.hideAnswers
+                         ? 'bg-surface border-border text-text-primary hover:bg-worksheet-surface'
+                         : isCorrect
+                             ? 'bg-success-50 border-success-400 text-success-900 font-medium'
+                             : 'bg-surface border-border text-text-primary hover:bg-worksheet-surface';
+
+                    return (
+                        <div key={key} className={`flex items-start p-3 border rounded-lg transition-colors correct-answer-indicator ${optionClasses}`}>
+                            <span className="font-bold mr-3">{key})</span> 
+                            <span className="flex-1">{value}</span>
+                        </div>
+                    );
+                })}
             </div>
         )}
 
         {/* True/False Answer */}
-        {question.soru_tipi === 'dogru_yanlis' && (
+        {!settings.hideAnswers && question.soru_tipi === 'dogru_yanlis' && (
              <div className="mt-4">
-                <p className={`font-semibold p-3 border rounded-lg inline-block correct-answer-indicator-text
+                <p className={`font-semibold p-3 border rounded-lg inline-block
                     ${question.dogru_cevap === 'Doğru' 
                         ? 'bg-success-50 border-success-400 text-success-900' 
                         : 'bg-danger-50 border-danger-400 text-danger-900'}`
@@ -217,9 +221,9 @@ const QuestionPreview: React.FC<{
         )}
 
         {/* Fill in the blank Answer */}
-        {question.soru_tipi === 'bosluk_doldurma' && (
+        {!settings.hideAnswers && question.soru_tipi === 'bosluk_doldurma' && (
             <div className="mt-4">
-                <p className="font-semibold p-3 border rounded-lg bg-success-50 border-success-400 text-success-900 inline-block correct-answer-indicator-text">
+                <p className="font-semibold p-3 border rounded-lg bg-success-50 border-success-400 text-success-900 inline-block">
                     Doğru Cevap: {question.dogru_cevap}
                 </p>
             </div>
@@ -228,10 +232,10 @@ const QuestionPreview: React.FC<{
         {/* Details section */}
         <div className="mt-6 pt-4 border-t border-border">
             <details open>
-                <summary className="cursor-pointer text-sm font-semibold text-text-secondary hover:text-text-primary">
+                <summary className="cursor-pointer font-semibold text-text-secondary hover:text-text-primary">
                     Çözüm ve Pedagojik Detaylar <i className="fas fa-chevron-down fa-xs ml-1"></i>
                 </summary>
-                <div className="mt-3 text-sm space-y-3 p-4 bg-primary-100/50 rounded-md border border-primary-100">
+                <div className="mt-3 space-y-3 p-4 bg-primary-100/50 rounded-md border border-primary-100">
                     <p><strong className="font-semibold text-text-primary">Çözüm Anahtarı:</strong> <span className="text-text-secondary">{question.cozum_anahtari}</span></p>
                     <p><strong className="font-semibold text-text-primary">Gerçek Yaşam Bağlantısı:</strong> <span className="text-text-secondary">{question.gercek_yasam_baglantisi}</span></p>
                 </div>
