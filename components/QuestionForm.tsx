@@ -163,9 +163,52 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ onGenerate, isLoadin
   const [difficulty, setDifficulty] = useState<Difficulty>('orta');
   const [questionCount, setQuestionCount] = useState<number>(10);
   const [customInstructions, setCustomInstructions] = useState<string>('');
+  const [draftNotification, setDraftNotification] = useState<string | null>(null);
 
   const availableUnits = useMemo(() => MEB_CURRICULUM[grade]?.units || [], [grade]);
   
+  // Component ilk yüklendiğinde taslağı yükle
+  useEffect(() => {
+    try {
+      const savedDraft = localStorage.getItem('turkGenQuestionFormDraft');
+      if (savedDraft) {
+        const draft = JSON.parse(savedDraft);
+        setGrade(draft.grade || '5');
+        setSelectedUnitNos(draft.selectedUnitNos || []);
+        setSelectedObjectiveCodes(draft.selectedObjectiveCodes || []);
+        setQuestionType(draft.questionType || 'coktan_secmeli');
+        setDifficulty(draft.difficulty || 'orta');
+        setQuestionCount(draft.questionCount || 10);
+        setCustomInstructions(draft.customInstructions || '');
+        
+        setDraftNotification("Kaydedilmiş taslağınız yüklendi.");
+        setTimeout(() => setDraftNotification(null), 3000);
+      }
+    } catch (error) {
+      console.error("Taslak yüklenirken hata oluştu:", error);
+      localStorage.removeItem('turkGenQuestionFormDraft'); // Bozuk taslağı temizle
+    }
+  }, []);
+
+  // Form durumu değiştikçe taslağı kaydet
+  useEffect(() => {
+    const draft = {
+      grade,
+      selectedUnitNos,
+      selectedObjectiveCodes,
+      questionType,
+      difficulty,
+      questionCount,
+      customInstructions,
+    };
+    try {
+      localStorage.setItem('turkGenQuestionFormDraft', JSON.stringify(draft));
+    } catch (error) {
+      console.error("Taslak kaydedilirken hata oluştu:", error);
+    }
+  }, [grade, selectedUnitNos, selectedObjectiveCodes, questionType, difficulty, questionCount, customInstructions]);
+
+
   // Sınıf değiştiğinde seçimleri sıfırla
   useEffect(() => {
     setSelectedUnitNos([]);
@@ -201,6 +244,19 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ onGenerate, isLoadin
     } else {
         alert("Lütfen en az bir ünite ve bir kazanım seçin.");
     }
+  };
+
+  const handleClearForm = () => {
+      setGrade('5');
+      setSelectedUnitNos([]);
+      setSelectedObjectiveCodes([]);
+      setQuestionType('coktan_secmeli');
+      setDifficulty('orta');
+      setQuestionCount(10);
+      setCustomInstructions('');
+      localStorage.removeItem('turkGenQuestionFormDraft');
+      setDraftNotification("Form temizlendi ve taslak silindi.");
+      setTimeout(() => setDraftNotification(null), 3000);
   };
   
   const handleUnitToggle = (unitNo: string) => {
@@ -252,6 +308,13 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ onGenerate, isLoadin
 
   return (
     <form onSubmit={handleSubmit}>
+       {draftNotification && (
+        <div className="mb-4 p-3 rounded-md bg-primary-100 text-primary-700 text-sm font-medium animate-fade-in text-center transition-all">
+          <i className="fas fa-info-circle mr-2"></i>
+          {draftNotification}
+        </div>
+      )}
+
        <AccordionSection title="1. Sınıf ve Ünite Seçimi" defaultOpen={true}>
          <div className="mb-4">
             <label htmlFor="grade-select" className="block text-sm font-medium text-text-secondary mb-1">Sınıf</label>
@@ -334,7 +397,16 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ onGenerate, isLoadin
         ></textarea>
        </AccordionSection>
       
-      <div className="mt-6">
+      <div className="mt-6 flex items-center gap-2">
+        <button
+          type="button"
+          onClick={handleClearForm}
+          disabled={isLoading}
+          title="Formu temizle ve kaydedilen taslağı sil"
+          className="w-auto flex justify-center items-center py-3 px-4 border border-border rounded-md shadow-sm text-sm font-medium text-text-secondary bg-surface hover:bg-worksheet-surface focus:outline-none focus:ring-2 focus:ring-offset-2 ring-primary-500 disabled:opacity-50 transition-colors"
+        >
+          <i className="fas fa-eraser mr-2"></i> Temizle
+        </button>
         <button 
           type="submit" 
           disabled={isLoading || selectedObjectiveCodes.length === 0}
