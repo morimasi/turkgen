@@ -1,5 +1,5 @@
 
-import type { Question, QuestionGenerationParams, ImageOptions } from '../types';
+import type { Question, QuestionGenerationParams } from '../types';
 
 export const generateQuestions = async (params: QuestionGenerationParams): Promise<Question[]> => {
   try {
@@ -30,14 +30,14 @@ export const generateQuestions = async (params: QuestionGenerationParams): Promi
   }
 };
 
-export const generateImage = async (prompt: string, options: ImageOptions): Promise<string> => {
+export const generateImage = async (prompt: string): Promise<string> => {
     try {
         const response = await fetch('/api/generateImage', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ prompt, options }),
+            body: JSON.stringify({ prompt }),
         });
 
         if (!response.ok) {

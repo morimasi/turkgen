@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import type { Question, PrintSettings, ImageOptions } from '../types';
+import React, { useState, useRef } from 'react';
+import type { Question, PrintSettings } from '../types';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { generateImage } from '../services/geminiService';
@@ -167,43 +167,17 @@ const QuestionPreview: React.FC<{
     index: number;
     onFeedback: (index: number, feedback: string) => void;
     feedbackStatus?: string;
-    onGenerateImage: (index: number, question: Question, options: ImageOptions) => void;
+    onGenerateImage: (index: number, question: Question) => void;
     generatedImage?: string;
     isImageLoading?: boolean;
     className?: string;
     style?: React.CSSProperties;
 }> = ({ question, settings, index, onFeedback, feedbackStatus, onGenerateImage, generatedImage, isImageLoading, className = '', style }) => {
-  const [isFeedbackPopoverOpen, setIsFeedbackPopoverOpen] = useState(false);
-  const [isImageOptionsOpen, setIsImageOptionsOpen] = useState(false);
-  const [imageOptions, setImageOptions] = useState<ImageOptions>({
-      style: 'cizgi-film',
-      palette: 'canli',
-      quality: 'hizli',
-  });
-  const imageOptionsRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-        if (imageOptionsRef.current && !imageOptionsRef.current.contains(event.target as Node)) {
-            setIsImageOptionsOpen(false);
-        }
-    }
-    if (isImageOptionsOpen) {
-        document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isImageOptionsOpen]);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   
   const handleFeedbackClick = (feedback: string) => {
     onFeedback(index, feedback);
-    setIsFeedbackPopoverOpen(false);
-  };
-  
-  const handleGenerateClick = () => {
-    onGenerateImage(index, question, imageOptions);
-    setIsImageOptionsOpen(false);
+    setIsPopoverOpen(false);
   };
 
   const combinedClasses = `bg-surface text-left mb-6 break-inside-avoid ${settings.showBorders ? 'border border-border rounded-lg p-6 shadow-sm' : 'p-2'} ${className}`;
@@ -241,59 +215,18 @@ const QuestionPreview: React.FC<{
             </p>
             {/* We only want the button if there's content to visualize */}
             {(question.paragraf_metni) && !generatedImage && (
-                <div className="no-print ml-4 flex-shrink-0 relative">
-                    <button
-                        onClick={() => setIsImageOptionsOpen(prev => !prev)}
-                        disabled={isImageLoading}
-                        className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md transition-colors shadow-sm bg-surface text-text-secondary hover:bg-worksheet-surface border border-border disabled:opacity-50 disabled:cursor-wait"
-                        title="Soru için görsel oluştur"
-                    >
-                        {isImageLoading ? (
-                            <><i className="fas fa-spinner fa-spin fa-fw"></i><span>Oluşturuluyor...</span></>
-                        ) : (
-                            <><i className="fas fa-magic fa-fw"></i><span>Görselleştir</span></>
-                        )}
-                    </button>
-                    {isImageOptionsOpen && (
-                        <div ref={imageOptionsRef} className="absolute bottom-full right-0 mb-2 w-72 bg-surface rounded-lg shadow-xl border border-border z-20 animate-scale-in p-4 space-y-3">
-                            <h4 className="font-semibold text-text-primary text-center border-b border-border pb-2 mb-3">Görsel Ayarları</h4>
-                            
-                            <div>
-                                <label htmlFor={`style-${index}`} className="block text-sm font-medium text-text-secondary mb-1">Stil</label>
-                                <select id={`style-${index}`} value={imageOptions.style} onChange={e => setImageOptions(o => ({...o, style: e.target.value as ImageOptions['style']}))} className="block w-full px-3 py-2 bg-background border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                                    <option value="cizgi-film">Çizgi Film</option>
-                                    <option value="gercekci">Gerçekçi</option>
-                                    <option value="suluboya">Suluboya</option>
-                                    <option value="cizgi-roman">Çizgi Roman</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label htmlFor={`palette-${index}`} className="block text-sm font-medium text-text-secondary mb-1">Renk Paleti</label>
-                                <select id={`palette-${index}`} value={imageOptions.palette} onChange={e => setImageOptions(o => ({...o, palette: e.target.value as ImageOptions['palette']}))} className="block w-full px-3 py-2 bg-background border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                                    <option value="canli">Canlı Renkler</option>
-                                    <option value="pastel">Pastel Tonlar</option>
-                                    <option value="siyah-beyaz">Siyah-Beyaz</option>
-                                </select>
-                            </div>
-                            
-                            <div>
-                                <label htmlFor={`quality-${index}`} className="block text-sm font-medium text-text-secondary mb-1">Kalite ve Hız</label>
-                                <select id={`quality-${index}`} value={imageOptions.quality} onChange={e => setImageOptions(o => ({...o, quality: e.target.value as ImageOptions['quality']}))} className="block w-full px-3 py-2 bg-background border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm">
-                                    <option value="hizli">Hızlı ve Basit</option>
-                                    <option value="yuksek-kalite">Yüksek Kalite</option>
-                                </select>
-                            </div>
-
-                            <button
-                                onClick={handleGenerateClick}
-                                className="w-full mt-4 flex justify-center items-center py-2 px-4 rounded-md shadow-sm text-sm font-medium text-on-primary bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 ring-primary-500"
-                            >
-                                <i className="fas fa-check mr-2"></i> Oluştur
-                            </button>
-                        </div>
+                <button 
+                    onClick={() => onGenerateImage(index, question)}
+                    disabled={isImageLoading}
+                    className="no-print ml-4 flex-shrink-0 flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md transition-colors shadow-sm bg-surface text-text-secondary hover:bg-worksheet-surface border border-border disabled:opacity-50 disabled:cursor-wait"
+                    title="Soru için görsel oluştur"
+                >
+                    {isImageLoading ? (
+                        <><i className="fas fa-spinner fa-spin fa-fw"></i><span>Oluşturuluyor...</span></>
+                    ) : (
+                        <><i className="fas fa-magic fa-fw"></i><span>Görselleştir</span></>
                     )}
-                </div>
+                </button>
             )}
         </div>
         
@@ -360,12 +293,12 @@ const QuestionPreview: React.FC<{
             ) : (
                 <div>
                     <button 
-                        onClick={() => setIsFeedbackPopoverOpen(!isFeedbackPopoverOpen)}
+                        onClick={() => setIsPopoverOpen(!isPopoverOpen)}
                         className="text-sm text-text-secondary hover:text-primary-600 font-medium py-1 px-3 rounded-md bg-worksheet-surface hover:opacity-80 transition-colors"
                     >
                         <i className="fas fa-star mr-2"></i> Soruyu Değerlendir
                     </button>
-                    {isFeedbackPopoverOpen && (
+                    {isPopoverOpen && (
                         <div className="absolute bottom-full right-0 mb-2 w-48 bg-surface rounded-lg shadow-xl border z-10 animate-scale-in">
                             <button onClick={() => handleFeedbackClick('harika')} className="w-full text-left flex items-center px-4 py-2 text-sm text-text-primary hover:bg-green-50 hover:text-green-800">
                                 <i className="fas fa-thumbs-up fa-fw mr-3 text-green-500"></i> Harika
@@ -400,14 +333,14 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
     setFeedback(prev => ({ ...prev, [questionIndex]: rating }));
   };
 
-  const handleGenerateImage = async (questionIndex: number, question: Question, options: ImageOptions) => {
+  const handleGenerateImage = async (questionIndex: number, question: Question) => {
     if (imageLoadingStates[questionIndex]) return;
 
     setImageLoadingStates(prev => ({ ...prev, [questionIndex]: true }));
     try {
-        const prompt = question.paragraf_metni || question.soru_metni;
+        const prompt = `Aşağıdaki metni anlatan, çocukların seveceği, renkli ve basit bir çizgi film tarzında illüstrasyon oluştur. Metin: "${question.paragraf_metni || question.soru_metni}"`;
         
-        const base64Image = await generateImage(prompt, options);
+        const base64Image = await generateImage(prompt);
         setGeneratedImages(prev => ({ ...prev, [questionIndex]: base64Image }));
     } catch (error) {
         console.error("Görsel oluşturulamadı:", error);
