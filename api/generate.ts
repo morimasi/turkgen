@@ -22,19 +22,21 @@ export default async function handler(req: any, res: any) {
         const ai = new GoogleGenAI({ apiKey });
         
         const userPrompt = createPrompt(params);
-        // Sistem talimatını ve kullanıcı istemini daha sağlam bir istek için birleştir
-        const fullPrompt = `${systemInstruction}\n\n${userPrompt}`;
 
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
-            contents: fullPrompt, // Birleştirilmiş prompt'u gönder
+            contents: userPrompt,
             config: {
+                systemInstruction: systemInstruction,
                 responseMimeType: 'application/json',
             }
         });
 
         const jsonString = response.text;
-        let questions: Question[] | Question = JSON.parse(jsonString);
+        // The model can sometimes still wrap the JSON in markdown.
+        const cleanedJsonString = jsonString.replace(/^```json\s*|```$/g, '').trim();
+        
+        let questions: Question[] | Question = JSON.parse(cleanedJsonString);
 
         if (!Array.isArray(questions)) {
             questions = [questions];
