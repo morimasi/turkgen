@@ -79,3 +79,10 @@ export interface ImageOptions {
   palette: 'canli' | 'pastel' | 'siyah-beyaz';
   quality: 'hizli' | 'yuksek-kalite';
 }
+
+export interface VocabularyWord {
+  kelime: string;
+  tanim: string;
+  es_anlam: string;
+  ornek_cumle: string;
+}

@@ -1,6 +1,7 @@
 
 
-import type { Question, QuestionGenerationParams, ImageOptions } from '../types';
+
+import type { Question, QuestionGenerationParams, ImageOptions, VocabularyWord } from '../types';
 
 export const generateQuestions = async (
     params: QuestionGenerationParams,
@@ -93,5 +94,30 @@ export const generateImage = async (prompt: string, options: ImageOptions): Prom
             throw new Error(`Görsel üretilirken bir ağ hatası oluştu. Lütfen tekrar deneyin.`);
         }
         throw new Error("Görsel üretilirken bilinmeyen bir ağ hatası oluştu.");
+    }
+};
+
+export const analyzeVocabulary = async (words: string[], grade: number): Promise<VocabularyWord[]> => {
+    try {
+        const response = await fetch('/api/analyzeVocabulary', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ words, grade }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: response.statusText }));
+            throw new Error(`Sunucu hatası: ${errorData.error || 'Bilinmeyen bir hata oluştu.'}`);
+        }
+
+        const data: VocabularyWord[] = await response.json();
+        return data;
+
+    } catch (error) {
+        console.error("Kelime analizi hatası:", error);
+        if (error instanceof Error) {
+            throw new Error(`Kelime analizi sırasında bir ağ hatası oluştu. Lütfen tekrar deneyin.`);
+        }
+        throw new Error("Kelime analizi sırasında bilinmeyen bir ağ hatası oluştu.");
     }
 };

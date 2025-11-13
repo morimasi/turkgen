@@ -1,6 +1,3 @@
-
-
-
 import { GoogleGenAI } from "@google/genai";
 import type { Question, QuestionGenerationParams } from '../types';
 
@@ -27,7 +24,9 @@ export default async function handler(req: Request) {
             async start(controller) {
                 const encoder = new TextEncoder();
 
-                const generateAndStreamQuestion = async () => {
+                // Soruları paralel olarak değil, sırayla (sequential) oluştur.
+                // Bu, API hız limitlerine takılma riskini azaltır ve daha güvenilir sonuçlar verir.
+                for (let i = 0; i < params.questionCount; i++) {
                     try {
                         const prompt = createPrompt(params);
                         const response = await ai.models.generateContent({
@@ -40,18 +39,31 @@ export default async function handler(req: Request) {
 
                         const jsonString = response.text;
                         const cleanedJsonString = jsonString.replace(/^```json\s*|```$/g, '').trim();
-                        
-                        JSON.parse(cleanedJsonString);
-                        
-                        controller.enqueue(encoder.encode(cleanedJsonString + '\n'));
-                    } catch (error) {
-                        console.error("Error generating a single question:", error);
-                    }
-                };
 
-                const promises = Array.from({ length: params.questionCount }, () => generateAndStreamQuestion());
-                await Promise.all(promises);
+                        // Kalite Kontrolü: AI'dan boş bir yanıt gelmediğinden emin ol.
+                        if (cleanedJsonString) {
+                            const question: Question = JSON.parse(cleanedJsonString);
+                            
+                            // Soru metninin varlığını ve boş olmadığını kontrol et.
+                            // Bu, "içeriği olmayan boş soru" sorununu önler.
+                            if (question && question.soru_metni && question.soru_metni.trim() !== '') {
+                                // Soru geçerliyse, stream'e gönder.
+                                controller.enqueue(encoder.encode(JSON.stringify(question) + '\n'));
+                            } else {
+                                // Soru geçersizse, konsola bir uyarı yaz ve atla.
+                                console.warn("Skipping invalid/empty question from AI:", cleanedJsonString);
+                            }
+                        } else {
+                             console.warn("Received empty response from AI for a question.");
+                        }
+
+                    } catch (error) {
+                        // Bir soru üretilirken hata olursa, işlemi durdurma, sadece hatayı logla ve devam et.
+                        console.error(`Error generating question ${i + 1} of ${params.questionCount}:`, error);
+                    }
+                }
                 
+                // Tüm sorular istendikten sonra stream'i kapat.
                 controller.close();
             },
         });

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import type { Question, PrintSettings, ImageOptions } from '../types';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -6,6 +6,7 @@ import { generateImage } from '../services/geminiService';
 
 interface QuestionDisplayProps {
   questions: Question[];
+  onShowVocabulary: () => void;
 }
 
 
@@ -17,6 +18,8 @@ interface PrintSettingsToolbarProps {
     onPrint: () => void;
     onDownloadPdf: () => void;
     isPdfProcessing: boolean;
+    onShowVocabulary: () => void;
+    hasParagraphs: boolean;
 }
 
 const PrintSettingsToolbar: React.FC<PrintSettingsToolbarProps> = ({ 
@@ -25,7 +28,9 @@ const PrintSettingsToolbar: React.FC<PrintSettingsToolbarProps> = ({
     onSaveToArchive,
     onPrint,
     onDownloadPdf,
-    isPdfProcessing
+    isPdfProcessing,
+    onShowVocabulary,
+    hasParagraphs
 }) => {
     
     const handleSettingChange = (key: keyof PrintSettings, value: any) => {
@@ -60,12 +65,13 @@ const PrintSettingsToolbar: React.FC<PrintSettingsToolbarProps> = ({
         onClick: () => void;
         disabled?: boolean;
         className?: string;
-    }> = ({ label, icon, onClick, disabled = false, className = ''}) => (
+        title?: string;
+    }> = ({ label, icon, onClick, disabled = false, className = '', title = ''}) => (
         <button
             onClick={onClick}
-            title={label}
+            title={title || label}
             disabled={disabled}
-            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-wait ${className}`}
+            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
         >
             <i className={`fas ${icon} fa-fw`}></i>
             <span className="hidden md:inline">{label}</span>
@@ -88,6 +94,7 @@ const PrintSettingsToolbar: React.FC<PrintSettingsToolbarProps> = ({
                     />
                 </div>
                 <div className="flex items-center gap-2">
+                    <ActionButton label="Kelime Çalışması" icon="fa-book-reader" onClick={onShowVocabulary} disabled={!hasParagraphs} className="bg-surface text-text-secondary hover:bg-worksheet-surface border border-border" title={!hasParagraphs ? "Bu özellik için paragraf içeren sorular gereklidir." : "Paragraflardan Kelime Çalışması Oluştur"}/>
                     <ActionButton label="Arşive Kaydet" icon="fa-save" onClick={onSaveToArchive} className="bg-surface text-text-secondary hover:bg-worksheet-surface border border-border"/>
                     <ActionButton label="Yazdır" icon="fa-print" onClick={onPrint} className="bg-text-secondary text-surface hover:opacity-80"/>
                     <ActionButton label={isPdfProcessing ? 'İşleniyor...' : 'PDF İndir'} icon={isPdfProcessing ? 'fa-spinner fa-spin' : 'fa-file-pdf'} onClick={onDownloadPdf} disabled={isPdfProcessing} className="bg-primary-600 text-on-primary hover:bg-primary-700"/>
@@ -420,7 +427,7 @@ const QuestionPreview: React.FC<{
 };
 
 
-export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) => {
+export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions, onShowVocabulary }) => {
   const [activeTab, setActiveTab] = useState<'preview' | 'json'>('preview');
   const [copied, setCopied] = useState(false);
   const [isProcessingPdf, setIsProcessingPdf] = useState(false);
@@ -428,6 +435,8 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
   const [feedback, setFeedback] = useState<{ [key: number]: string }>({});
   const [generatedImages, setGeneratedImages] = useState<{ [key: number]: string }>({});
   const [imageLoadingStates, setImageLoadingStates] = useState<{ [key: number]: boolean }>({});
+
+  const hasParagraphs = useMemo(() => questions.some(q => q.paragraf_metni), [questions]);
 
 
   const handleFeedback = (questionIndex: number, rating: string) => {
@@ -589,6 +598,8 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
                 onPrint={handlePrint}
                 onDownloadPdf={handleDownloadPdf}
                 isPdfProcessing={isProcessingPdf}
+                onShowVocabulary={onShowVocabulary}
+                hasParagraphs={hasParagraphs}
             />
             <div id="print-area" ref={printAreaRef} className={printAreaClasses} style={printAreaStyles}>
               {printSettings.showExamTitle && printSettings.examTitle && (
