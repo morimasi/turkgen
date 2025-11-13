@@ -58,6 +58,7 @@ export interface PrintSettings {
   showExamTitle: boolean;
   examTitle: string;
   showWorksheetHeader: boolean;
+  useWhiteBackground: boolean;
 }
 
 export interface ArchivedExam {

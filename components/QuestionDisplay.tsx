@@ -103,6 +103,7 @@ const PrintSettingsToolbar: React.FC<PrintSettingsToolbarProps> = ({
                     <ToggleButton label="Cevaplar" iconOn="fa-key" iconOff="fa-eye-slash" isOn={!settings.hideAnswers} onClick={() => handleSettingChange('hideAnswers', !settings.hideAnswers)} />
                     <ToggleButton label="Detaylar" iconOn="fa-book-open" iconOff="fa-eye-slash" isOn={!settings.hideDetails} onClick={() => handleSettingChange('hideDetails', !settings.hideDetails)} />
                     <ToggleButton label="Kenarlık" iconOn="fa-border-all" iconOff="fa-border-none" isOn={settings.showBorders} onClick={() => handleSettingChange('showBorders', !settings.showBorders)} />
+                    <ToggleButton label="Sade Zemin" iconOn="fa-file" iconOff="fa-palette" isOn={settings.useWhiteBackground} onClick={() => handleSettingChange('useWhiteBackground', !settings.useWhiteBackground)} />
                 </div>
                 <div className="h-6 w-px bg-border hidden lg:block"></div>
                  {/* Biçim Ayarları */}
@@ -297,6 +298,7 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
       showWorksheetHeader: true,
       showExamTitle: true,
       examTitle: 'Türkçe Dersi Çalışma Kağıdı',
+      useWhiteBackground: true,
   });
 
   const jsonString = JSON.stringify(questions, null, 2);
@@ -381,7 +383,7 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
     printSettings.fontFamily === 'Atkinson Hyperlegible' ? 'font-atkinson-hyperlegible' : 'font-inter',
     printSettings.hideAnswers ? 'answer-hidden' : '',
     printSettings.hideDetails ? 'details-hidden' : '',
-    'bg-surface', // PDF için beyaz arka planı garantile
+    printSettings.useWhiteBackground ? 'bg-white' : 'bg-surface',
   ].join(' ');
   
   const printAreaStyles: React.CSSProperties = {
