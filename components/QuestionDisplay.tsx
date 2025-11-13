@@ -97,7 +97,7 @@ const PrintSettingsToolbar: React.FC<PrintSettingsToolbarProps> = ({
             {/* Alt Satır: Ayarlar ve Görünürlük */}
             <div className="flex flex-wrap items-center gap-x-6 gap-y-3 pt-3 border-t border-border">
                 {/* Görünürlük Ayarları */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                     <ToggleButton label="Başlık" iconOn="fa-eye" iconOff="fa-eye-slash" isOn={settings.showExamTitle} onClick={() => handleSettingChange('showExamTitle', !settings.showExamTitle)} />
                     <ToggleButton label="Kazanımlar" iconOn="fa-info-circle" iconOff="fa-eye-slash" isOn={settings.showWorksheetHeader} onClick={() => handleSettingChange('showWorksheetHeader', !settings.showWorksheetHeader)} />
                     <ToggleButton label="Soru No" iconOn="fa-list-ol" iconOff="fa-eye-slash" isOn={settings.showQuestionNumbers} onClick={() => handleSettingChange('showQuestionNumbers', !settings.showQuestionNumbers)} />
@@ -108,7 +108,7 @@ const PrintSettingsToolbar: React.FC<PrintSettingsToolbarProps> = ({
                 </div>
                 <div className="h-6 w-px bg-border hidden lg:block"></div>
                  {/* Biçim Ayarları */}
-                <div className="flex items-center gap-x-4">
+                <div className="flex items-center gap-x-4 gap-y-3 flex-wrap">
                     <div className="flex items-center" title="Yazı Tipi Boyutu">
                         <i className="fas fa-text-height text-text-secondary mr-2"></i>
                         <input type="number" id="fontSize" value={settings.fontSize} onChange={(e) => handleSettingChange('fontSize', parseInt(e.target.value))} className="w-16 bg-surface border-border rounded-md shadow-sm text-sm p-1.5"/>
@@ -126,6 +126,34 @@ const PrintSettingsToolbar: React.FC<PrintSettingsToolbarProps> = ({
                             <button onClick={() => handleSettingChange('columns', 1)} className={`px-3 py-1 text-sm rounded-l-md transition ${settings.columns === 1 ? 'bg-primary-600 text-on-primary' : 'bg-surface hover:bg-worksheet-surface'}`}>1</button>
                             <button onClick={() => handleSettingChange('columns', 2)} className={`px-3 py-1 text-sm rounded-r-md border-l border-border transition ${settings.columns === 2 ? 'bg-primary-600 text-on-primary' : 'bg-surface hover:bg-worksheet-surface'}`}>2</button>
                         </div>
+                    </div>
+                    <div className="flex items-center" title="Satır Aralığı">
+                        <i className="fas fa-arrows-alt-v text-text-secondary mr-2"></i>
+                        <input
+                            type="range"
+                            id="lineHeight"
+                            min="1.2"
+                            max="2.5"
+                            step="0.1"
+                            value={settings.lineHeight}
+                            onChange={(e) => handleSettingChange('lineHeight', parseFloat(e.target.value))}
+                            className="w-20 sm:w-24 h-2 bg-worksheet-surface rounded-lg appearance-none cursor-pointer accent-primary-600"
+                        />
+                        <span className="text-xs text-text-secondary ml-2 w-8 text-right">{settings.lineHeight.toFixed(1)}</span>
+                    </div>
+                    <div className="flex items-center" title="Soru Aralığı">
+                        <i className="fas fa-grip-lines text-text-secondary mr-2"></i>
+                        <input
+                            type="range"
+                            id="questionSpacing"
+                            min="8"
+                            max="64"
+                            step="4"
+                            value={settings.questionSpacing}
+                            onChange={(e) => handleSettingChange('questionSpacing', parseInt(e.target.value, 10))}
+                            className="w-20 sm:w-24 h-2 bg-worksheet-surface rounded-lg appearance-none cursor-pointer accent-primary-600"
+                        />
+                        <span className="text-xs text-text-secondary ml-2 w-10 text-right">{settings.questionSpacing}px</span>
                     </div>
                 </div>
             </div>
@@ -172,7 +200,8 @@ const QuestionPreview: React.FC<{
     isImageLoading?: boolean;
     className?: string;
     style?: React.CSSProperties;
-}> = ({ question, settings, index, onFeedback, feedbackStatus, onGenerateImage, generatedImage, isImageLoading, className = '', style }) => {
+    questionSpacing: number;
+}> = ({ question, settings, index, onFeedback, feedbackStatus, onGenerateImage, generatedImage, isImageLoading, className = '', style, questionSpacing }) => {
   const [isFeedbackPopoverOpen, setIsFeedbackPopoverOpen] = useState(false);
   const [isImageOptionsOpen, setIsImageOptionsOpen] = useState(false);
   const [imageOptions, setImageOptions] = useState<ImageOptions>({
@@ -206,10 +235,15 @@ const QuestionPreview: React.FC<{
     setIsImageOptionsOpen(false);
   };
 
-  const combinedClasses = `bg-surface text-left mb-6 break-inside-avoid ${settings.showBorders ? 'border border-border rounded-lg p-6 shadow-sm' : 'p-2'} ${className}`;
+  const combinedClasses = `bg-surface text-left break-inside-avoid ${settings.showBorders ? 'border border-border rounded-lg p-6 shadow-sm' : 'p-2'} ${className}`;
+  
+  const componentStyle: React.CSSProperties = {
+      ...style,
+      marginBottom: `${questionSpacing}px`,
+  };
 
   return (
-    <div className={combinedClasses} style={style}>
+    <div className={combinedClasses} style={componentStyle}>
         
         {/* Image and Paragraph Section */}
         {question.paragraf_metni && (
@@ -430,6 +464,8 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
       showExamTitle: true,
       examTitle: 'Türkçe Dersi Çalışma Kağıdı',
       useWhiteBackground: true,
+      lineHeight: 1.5,
+      questionSpacing: 24,
   });
 
   const jsonString = JSON.stringify(questions, null, 2);
@@ -520,7 +556,8 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
   const printAreaStyles: React.CSSProperties = {
       fontSize: `${printSettings.fontSize}pt`,
       columnCount: printSettings.columns,
-      columnGap: '20px'
+      columnGap: '20px',
+      lineHeight: printSettings.lineHeight,
   };
 
   return (
@@ -569,6 +606,7 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
                     onGenerateImage={handleGenerateImage}
                     generatedImage={generatedImages[index]}
                     isImageLoading={imageLoadingStates[index]}
+                    questionSpacing={printSettings.questionSpacing}
                     className="animate-fade-in-blur"
                     style={{ animationDelay: `${index * 100}ms` }}
                   />
