@@ -1,6 +1,6 @@
 {
-  "name": "MEB Türkçe Soru Üretici",
-  "description": "Milli Eğitim Bakanlığı müfredatına uygun, 4-8. sınıflar için yapay zeka destekli Türkçe soruları üreten bir web uygulaması.",
+  "name": "TurkGen",
+  "description": "TurkGen, Milli Eğitim Bakanlığı müfredatına uygun, 4-8. sınıflar için yapay zeka destekli Türkçe soruları üreten bir web uygulamasıdır.",
   "requestFramePermissions": [
     "microphone"
   ]

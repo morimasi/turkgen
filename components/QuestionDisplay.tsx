@@ -334,7 +334,7 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
             heightLeft -= (pdfHeight - 20);
         }
         
-        pdf.save(`turkce-sorular-${Date.now()}.pdf`);
+        pdf.save(`turkgen-sorular-${Date.now()}.pdf`);
     } catch (error) {
         console.error("Error generating PDF:", error);
         alert("PDF oluşturulurken bir hata oluştu.");
@@ -348,7 +348,7 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
         const examName = prompt("Bu sınav setine bir ad verin:", `Sınav - ${new Date().toLocaleDateString('tr-TR')}`);
         if (!examName) return;
 
-        const archive = JSON.parse(localStorage.getItem('turkceSoruArsivi') || '[]');
+        const archive = JSON.parse(localStorage.getItem('turkGenSoruArsivi') || '[]');
         const newExam = {
             id: `exam-${Date.now()}`,
             name: examName,
@@ -356,7 +356,7 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
             questions: questions
         };
         archive.push(newExam);
-        localStorage.setItem('turkceSoruArsivi', JSON.stringify(archive));
+        localStorage.setItem('turkGenSoruArsivi', JSON.stringify(archive));
         alert(`"${examName}" başarıyla arşive kaydedildi!`);
     } catch (error) {
         console.error("Arşive kaydederken hata oluştu:", error);

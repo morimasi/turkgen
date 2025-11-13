@@ -14,7 +14,7 @@ export const ArchiveModal: React.FC<ArchiveModalProps> = ({ isOpen, onClose, onL
   useEffect(() => {
     if (isOpen) {
       try {
-        const archiveData = localStorage.getItem('turkceSoruArsivi');
+        const archiveData = localStorage.getItem('turkGenSoruArsivi');
         const archive = archiveData ? JSON.parse(archiveData) : [];
         archive.sort((a: ArchivedExam, b: ArchivedExam) => new Date(b.date).getTime() - new Date(a.date).getTime());
         setArchivedExams(archive);
@@ -28,7 +28,7 @@ export const ArchiveModal: React.FC<ArchiveModalProps> = ({ isOpen, onClose, onL
   const handleDelete = (examId: string) => {
     if (window.confirm("Bu sınavı arşivden silmek istediğinizden emin misiniz?")) {
       const updatedExams = archivedExams.filter(exam => exam.id !== examId);
-      localStorage.setItem('turkceSoruArsivi', JSON.stringify(updatedExams));
+      localStorage.setItem('turkGenSoruArsivi', JSON.stringify(updatedExams));
       setArchivedExams(updatedExams);
     }
   };
