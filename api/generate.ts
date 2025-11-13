@@ -42,7 +42,9 @@ export default async function handler(req: Request) {
 
                         // Kalite Kontrolü: AI'dan boş bir yanıt gelmediğinden emin ol.
                         if (cleanedJsonString) {
-                            const question: Question = JSON.parse(cleanedJsonString);
+                            const parsedData = JSON.parse(cleanedJsonString);
+                            // AI'nın tek bir nesne mi yoksa tek elemanlı bir dizi mi döndürdüğünü kontrol et.
+                            const question: Question = Array.isArray(parsedData) ? parsedData[0] : parsedData;
                             
                             // Soru metninin varlığını ve boş olmadığını kontrol et.
                             // Bu, "içeriği olmayan boş soru" sorununu önler.
