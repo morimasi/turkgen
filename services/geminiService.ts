@@ -1,43 +1,79 @@
 
-import type { Question, QuestionGenerationParams } from '../types';
 
-export const generateQuestions = async (params: QuestionGenerationParams): Promise<Question[]> => {
-  try {
-    const response = await fetch('/api/generate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(params),
-    });
+import type { Question, QuestionGenerationParams, ImageOptions } from '../types';
 
-    if (!response.ok) {
-      // Sunucudan gelen hata mesajını ayrıştırmaya çalış
-      const errorData = await response.json().catch(() => ({ error: response.statusText }));
-      throw new Error(`Sunucu hatası: ${errorData.error || 'Bilinmeyen bir hata oluştu.'}`);
+export const generateQuestions = async (
+    params: QuestionGenerationParams,
+    onQuestion: (question: Question) => void,
+    onError: (error: Error) => void,
+    onComplete: () => void
+): Promise<void> => {
+    try {
+        const response = await fetch('/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(params),
+        });
+
+        if (!response.ok || !response.body) {
+            const errorData = await response.json().catch(() => ({ error: response.statusText }));
+            throw new Error(`Sunucu hatası: ${errorData.error || 'Bilinmeyen bir hata oluştu.'}`);
+        }
+        
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        const processStream = async () => {
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) {
+                    if (buffer.trim()) {
+                       try {
+                           const question: Question = JSON.parse(buffer);
+                           onQuestion(question);
+                       } catch (e) {
+                           console.error("Failed to parse final question JSON from stream:", e, "Line:", buffer);
+                       }
+                    }
+                    break;
+                }
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+
+                for (const line of lines) {
+                    if (line.trim() === '') continue;
+                    try {
+                        const question: Question = JSON.parse(line);
+                        onQuestion(question);
+                    } catch (e) {
+                        console.error("Failed to parse question JSON from stream:", e, "Line:", line);
+                    }
+                }
+            }
+        };
+
+        await processStream();
+        onComplete();
+    } catch (error) {
+        console.error("Soru üretme akışı hatası:", error);
+        const err = error instanceof Error
+            ? new Error(`Soru üretilirken bir ağ hatası oluştu. Lütfen internet bağlantınızı kontrol edin veya daha sonra tekrar deneyin.`)
+            : new Error("Soru üretilirken bilinmeyen bir ağ hatası oluştu.");
+        onError(err);
     }
-
-    const questions: Question[] = await response.json();
-    return questions;
-
-  } catch (error) {
-    console.error("Soru üretme hatası:", error);
-    if (error instanceof Error) {
-        // Kullanıcıya daha anlaşılır bir mesajla hatayı yeniden fırlat
-        throw new Error(`Soru üretilirken bir ağ hatası oluştu. Lütfen internet bağlantınızı kontrol edin veya daha sonra tekrar deneyin.`);
-    }
-    throw new Error("Soru üretilirken bilinmeyen bir ağ hatası oluştu.");
-  }
 };
 
-export const generateImage = async (prompt: string): Promise<string> => {
+
+export const generateImage = async (prompt: string, options: ImageOptions): Promise<string> => {
     try {
         const response = await fetch('/api/generateImage', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ prompt }),
+            body: JSON.stringify({ prompt, options }),
         });
 
         if (!response.ok) {

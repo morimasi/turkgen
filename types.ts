@@ -71,3 +71,9 @@ export interface ArchivedExam {
 }
 
 export type Theme = 'sky' | 'emerald' | 'rose' | 'indigo' | 'slate' | 'coffee';
+
+export interface ImageOptions {
+  style: 'cizgi-film' | 'gercekci' | 'suluboya' | 'cizgi-roman';
+  palette: 'canli' | 'pastel' | 'siyah-beyaz';
+  quality: 'hizli' | 'yuksek-kalite';
+}

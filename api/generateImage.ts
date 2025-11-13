@@ -1,6 +1,34 @@
 
 
+
 import { GoogleGenAI } from "@google/genai";
+import type { ImageOptions } from '../types';
+
+const constructEnhancedPrompt = (basePrompt: string, options: ImageOptions): string => {
+    let styleText = '';
+    switch (options.style) {
+        case 'cizgi-film': styleText = 'Çocukların seveceği, neşeli bir çizgi film tarzında, '; break;
+        case 'gercekci': styleText = 'Fotogerçekçi bir tarzda, '; break;
+        case 'suluboya': styleText = 'Yumuşak geçişli bir suluboya tablo tarzında, '; break;
+        case 'cizgi-roman': styleText = 'Canlı ve belirgin çizgilere sahip bir çizgi roman panelinden fırlamış gibi, '; break;
+    }
+
+    let paletteText = '';
+    switch (options.palette) {
+        case 'canli': paletteText = 'canlı ve parlak renkler kullanarak, '; break;
+        case 'pastel': paletteText = 'pastel ve yumuşak renk tonları kullanarak, '; break;
+        case 'siyah-beyaz': paletteText = 'siyah-beyaz ve gölgeli olarak, '; break;
+    }
+    
+    let qualityText = '';
+    switch (options.quality) {
+        case 'hizli': qualityText = 'basit ve anlaşılır bir çizimle, '; break;
+        case 'yuksek-kalite': qualityText = 'yüksek detaylı ve kaliteli bir illüstrasyonla, '; break;
+    }
+
+    const prefix = `${styleText}${paletteText}${qualityText}`;
+    return `${prefix}aşağıdaki metni anlatan bir görsel oluştur: "${basePrompt}"`;
+}
 
 // Vercel Serverless Function for Node.js runtime
 export default async function handler(req: any, res: any) {
@@ -15,16 +43,18 @@ export default async function handler(req: any, res: any) {
     }
 
     try {
-        const { prompt } = req.body;
-        if (!prompt) {
-            return res.status(400).json({ error: "Görsel oluşturmak için bir metin istemi gereklidir." });
+        const { prompt, options } = req.body;
+        if (!prompt || !options) {
+            return res.status(400).json({ error: "Görsel oluşturmak için bir metin istemi ve seçenekler gereklidir." });
         }
         
         const ai = new GoogleGenAI({ apiKey });
         
+        const enhancedPrompt = constructEnhancedPrompt(prompt, options);
+
         const response = await ai.models.generateImages({
             model: 'imagen-4.0-generate-001',
-            prompt: prompt,
+            prompt: enhancedPrompt,
             config: {
               numberOfImages: 1,
               outputMimeType: 'image/png',
