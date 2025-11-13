@@ -132,7 +132,7 @@ const PrintSettingsToolbar: React.FC<PrintSettingsToolbarProps> = ({
                         <input
                             type="range"
                             id="lineHeight"
-                            min="1.2"
+                            min="1.0"
                             max="2.5"
                             step="0.1"
                             value={settings.lineHeight}
@@ -146,9 +146,9 @@ const PrintSettingsToolbar: React.FC<PrintSettingsToolbarProps> = ({
                         <input
                             type="range"
                             id="questionSpacing"
-                            min="8"
+                            min="2"
                             max="64"
-                            step="4"
+                            step="2"
                             value={settings.questionSpacing}
                             onChange={(e) => handleSettingChange('questionSpacing', parseInt(e.target.value, 10))}
                             className="w-20 sm:w-24 h-2 bg-worksheet-surface rounded-lg appearance-none cursor-pointer accent-primary-600"
