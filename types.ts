@@ -59,6 +59,8 @@ export interface PrintSettings {
   examTitle: string;
   showWorksheetHeader: boolean;
   useWhiteBackground: boolean;
+  lineHeight: number;
+  questionSpacing: number;
 }
 
 export interface ArchivedExam {

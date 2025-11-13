@@ -108,7 +108,7 @@ const PrintSettingsToolbar: React.FC<PrintSettingsToolbarProps> = ({
                 </div>
                 <div className="h-6 w-px bg-border hidden lg:block"></div>
                  {/* Biçim Ayarları */}
-                <div className="flex items-center gap-x-4">
+                <div className="flex items-center gap-x-4 flex-wrap gap-y-3">
                     <div className="flex items-center" title="Yazı Tipi Boyutu">
                         <i className="fas fa-text-height text-text-secondary mr-2"></i>
                         <input type="number" id="fontSize" value={settings.fontSize} onChange={(e) => handleSettingChange('fontSize', parseInt(e.target.value))} className="w-16 bg-surface border-border rounded-md shadow-sm text-sm p-1.5"/>
@@ -126,6 +126,16 @@ const PrintSettingsToolbar: React.FC<PrintSettingsToolbarProps> = ({
                             <button onClick={() => handleSettingChange('columns', 1)} className={`px-3 py-1 text-sm rounded-l-md transition ${settings.columns === 1 ? 'bg-primary-600 text-on-primary' : 'bg-surface hover:bg-worksheet-surface'}`}>1</button>
                             <button onClick={() => handleSettingChange('columns', 2)} className={`px-3 py-1 text-sm rounded-r-md border-l border-border transition ${settings.columns === 2 ? 'bg-primary-600 text-on-primary' : 'bg-surface hover:bg-worksheet-surface'}`}>2</button>
                         </div>
+                    </div>
+                     <div className="flex items-center" title="Satır Aralığı">
+                        <i className="fas fa-align-left text-text-secondary mr-2"></i>
+                        <input type="range" min="1.2" max="2.5" step="0.1" value={settings.lineHeight} onChange={(e) => handleSettingChange('lineHeight', parseFloat(e.target.value))} className="w-24 h-2 bg-worksheet-surface rounded-lg appearance-none cursor-pointer" />
+                        <span className="text-sm font-mono text-text-secondary w-10 text-right">{settings.lineHeight.toFixed(1)}</span>
+                    </div>
+                    <div className="flex items-center" title="Sorular Arası Boşluk">
+                        <i className="fas fa-arrows-alt-v text-text-secondary mr-2"></i>
+                        <input type="range" min="8" max="64" step="4" value={settings.questionSpacing} onChange={(e) => handleSettingChange('questionSpacing', parseInt(e.target.value, 10))} className="w-24 h-2 bg-worksheet-surface rounded-lg appearance-none cursor-pointer" />
+                        <span className="text-sm font-mono text-text-secondary w-12 text-right">{settings.questionSpacing}px</span>
                     </div>
                 </div>
             </div>
@@ -314,7 +324,7 @@ const QuestionPreview: React.FC<{
     setIsImageSettingsOpen(false);
   };
 
-  const combinedClasses = `bg-surface text-left mb-6 break-inside-avoid ${settings.showBorders ? 'border border-border rounded-lg p-6 shadow-sm' : 'p-2'} ${className}`;
+  const combinedClasses = `bg-surface text-left break-inside-avoid ${settings.showBorders ? 'border border-border rounded-lg p-6 shadow-sm' : 'p-2'} ${className}`;
 
   return (
     <div className={combinedClasses} style={style}>
@@ -504,6 +514,8 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
       showExamTitle: true,
       examTitle: 'Türkçe Dersi Çalışma Kağıdı',
       useWhiteBackground: true,
+      lineHeight: 1.6,
+      questionSpacing: 24,
   });
 
   const jsonString = JSON.stringify(questions, null, 2);
@@ -594,7 +606,8 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
   const printAreaStyles: React.CSSProperties = {
       fontSize: `${printSettings.fontSize}pt`,
       columnCount: printSettings.columns,
-      columnGap: '20px'
+      columnGap: '20px',
+      lineHeight: printSettings.lineHeight,
   };
 
   return (
@@ -644,7 +657,10 @@ export const QuestionDisplay: React.FC<QuestionDisplayProps> = ({ questions }) =
                     generatedImage={generatedImages[index]}
                     isImageLoading={imageLoadingStates[index]}
                     className="animate-fade-in-blur"
-                    style={{ animationDelay: `${index * 100}ms` }}
+                    style={{ 
+                        marginBottom: `${printSettings.questionSpacing}px`,
+                        animationDelay: `${index * 100}ms` 
+                    }}
                   />
               ))}
             </div>
