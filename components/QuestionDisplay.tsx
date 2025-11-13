@@ -45,8 +45,8 @@ const PrintSettingsToolbar: React.FC<PrintSettingsToolbarProps> = ({
             className={`flex items-center gap-2 px-3 py-1.5 text-sm rounded-md transition-colors ${
                 isOn 
                 ? 'bg-primary-100 text-primary-700 font-semibold' 
-                : 'bg-surface text-text-secondary hover:bg-slate-100'
-            } border border-slate-300 shadow-sm`}
+                : 'bg-surface text-text-secondary hover:bg-worksheet-surface'
+            } border border-border shadow-sm`}
         >
             <i className={`fas ${isOn ? iconOn : iconOff} fa-fw`}></i>
             <span className="hidden sm:inline">{label}</span>
@@ -72,7 +72,7 @@ const PrintSettingsToolbar: React.FC<PrintSettingsToolbarProps> = ({
     );
 
     return (
-        <div className="no-print p-3 bg-slate-100 border border-border rounded-lg mb-4 flex flex-col gap-4 shadow-inner">
+        <div className="no-print p-3 bg-background border border-border rounded-lg mb-4 flex flex-col gap-4 shadow-inner">
              {/* Üst Satır: Başlık ve Eylemler */}
             <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-2 flex-grow" title="Sınav Başlığı">
@@ -83,13 +83,13 @@ const PrintSettingsToolbar: React.FC<PrintSettingsToolbarProps> = ({
                         placeholder="Sınav Başlığı Girin..."
                         value={settings.examTitle}
                         onChange={(e) => handleSettingChange('examTitle', e.target.value)}
-                        className="flex-grow border-slate-300 rounded-md shadow-sm text-base p-1.5 focus:ring-primary-500 focus:border-primary-500"
+                        className="flex-grow bg-surface border-border rounded-md shadow-sm text-base p-1.5 focus:ring-primary-500 focus:border-primary-500"
                     />
                 </div>
                 <div className="flex items-center gap-2">
-                    <ActionButton label="Arşive Kaydet" icon="fa-save" onClick={onSaveToArchive} className="bg-surface text-text-secondary hover:bg-slate-100 border border-slate-300"/>
-                    <ActionButton label="Yazdır" icon="fa-print" onClick={onPrint} className="bg-slate-600 text-white hover:bg-slate-700"/>
-                    <ActionButton label={isPdfProcessing ? 'İşleniyor...' : 'PDF İndir'} icon={isPdfProcessing ? 'fa-spinner fa-spin' : 'fa-file-pdf'} onClick={onDownloadPdf} disabled={isPdfProcessing} className="bg-primary-600 text-white hover:bg-primary-700"/>
+                    <ActionButton label="Arşive Kaydet" icon="fa-save" onClick={onSaveToArchive} className="bg-surface text-text-secondary hover:bg-worksheet-surface border border-border"/>
+                    <ActionButton label="Yazdır" icon="fa-print" onClick={onPrint} className="bg-text-secondary text-surface hover:opacity-80"/>
+                    <ActionButton label={isPdfProcessing ? 'İşleniyor...' : 'PDF İndir'} icon={isPdfProcessing ? 'fa-spinner fa-spin' : 'fa-file-pdf'} onClick={onDownloadPdf} disabled={isPdfProcessing} className="bg-primary-600 text-on-primary hover:bg-primary-700"/>
                 </div>
             </div>
 
@@ -104,25 +104,25 @@ const PrintSettingsToolbar: React.FC<PrintSettingsToolbarProps> = ({
                     <ToggleButton label="Detaylar" iconOn="fa-book-open" iconOff="fa-eye-slash" isOn={!settings.hideDetails} onClick={() => handleSettingChange('hideDetails', !settings.hideDetails)} />
                     <ToggleButton label="Kenarlık" iconOn="fa-border-all" iconOff="fa-border-none" isOn={settings.showBorders} onClick={() => handleSettingChange('showBorders', !settings.showBorders)} />
                 </div>
-                <div className="h-6 w-px bg-slate-300 hidden lg:block"></div>
+                <div className="h-6 w-px bg-border hidden lg:block"></div>
                  {/* Biçim Ayarları */}
                 <div className="flex items-center gap-x-4">
                     <div className="flex items-center" title="Yazı Tipi Boyutu">
                         <i className="fas fa-text-height text-text-secondary mr-2"></i>
-                        <input type="number" id="fontSize" value={settings.fontSize} onChange={(e) => handleSettingChange('fontSize', parseInt(e.target.value))} className="w-16 border-slate-300 rounded-md shadow-sm text-sm p-1.5"/>
+                        <input type="number" id="fontSize" value={settings.fontSize} onChange={(e) => handleSettingChange('fontSize', parseInt(e.target.value))} className="w-16 bg-surface border-border rounded-md shadow-sm text-sm p-1.5"/>
                     </div>
                     <div className="flex items-center" title="Yazı Tipi Ailesi">
                         <i className="fas fa-font text-text-secondary mr-2"></i>
-                        <select id="fontFamily" value={settings.fontFamily} onChange={(e) => handleSettingChange('fontFamily', e.target.value as 'Inter' | 'Atkinson Hyperlegible')} className="border-slate-300 rounded-md shadow-sm text-sm p-1.5">
+                        <select id="fontFamily" value={settings.fontFamily} onChange={(e) => handleSettingChange('fontFamily', e.target.value as 'Inter' | 'Atkinson Hyperlegible')} className="bg-surface border-border rounded-md shadow-sm text-sm p-1.5">
                             <option value="Inter">Normal</option>
                             <option value="Atkinson Hyperlegible">Disleksi Dostu</option>
                         </select>
                     </div>
                     <div className="flex items-center" title="Sütun Sayısı">
                         <i className="fas fa-columns text-text-secondary mr-2"></i>
-                        <div className="flex items-center rounded-md shadow-sm border border-slate-300">
-                            <button onClick={() => handleSettingChange('columns', 1)} className={`px-3 py-1 text-sm rounded-l-md transition ${settings.columns === 1 ? 'bg-primary-600 text-white' : 'bg-surface hover:bg-slate-100'}`}>1</button>
-                            <button onClick={() => handleSettingChange('columns', 2)} className={`px-3 py-1 text-sm rounded-r-md border-l border-slate-300 transition ${settings.columns === 2 ? 'bg-primary-600 text-white' : 'bg-surface hover:bg-slate-100'}`}>2</button>
+                        <div className="flex items-center rounded-md shadow-sm border border-border">
+                            <button onClick={() => handleSettingChange('columns', 1)} className={`px-3 py-1 text-sm rounded-l-md transition ${settings.columns === 1 ? 'bg-primary-600 text-on-primary' : 'bg-surface hover:bg-worksheet-surface'}`}>1</button>
+                            <button onClick={() => handleSettingChange('columns', 2)} className={`px-3 py-1 text-sm rounded-r-md border-l border-border transition ${settings.columns === 2 ? 'bg-primary-600 text-on-primary' : 'bg-surface hover:bg-worksheet-surface'}`}>2</button>
                         </div>
                     </div>
                 </div>
@@ -141,7 +141,7 @@ const WorksheetHeader: React.FC<{ questions: Question[] }> = ({ questions }) => 
     const uniqueUnits = [...new Map(questions.map(q => [q.unite_no, q.unite_adi])).values()].join(', ');
     
     return (
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 mb-8 text-sm break-inside-avoid">
+        <div className="border-2 border-dashed border-border rounded-lg p-4 mb-8 text-sm break-inside-avoid">
             <h2 className="text-lg font-bold text-text-primary mb-2">{grade}. Sınıf Türkçe</h2>
             <div className="space-y-2">
                 <p><strong className="font-semibold text-text-secondary">Üniteler:</strong> {uniqueUnits}</p>
@@ -177,7 +177,7 @@ const QuestionPreview: React.FC<{
     <div className={`bg-surface text-left mb-6 break-inside-avoid ${settings.showBorders ? 'border border-border rounded-lg p-6 shadow-sm' : 'p-2'}`}>
         {/* Paragraph */}
         {question.paragraf_metni && (
-            <p className="mb-5 p-4 bg-slate-50 border-l-4 border-slate-300 text-text-primary leading-relaxed text-base">{question.paragraf_metni}</p>
+            <p className="mb-5 p-4 bg-background border-l-4 border-border text-text-primary leading-relaxed text-base">{question.paragraf_metni}</p>
         )}
         
         {/* Question Text */}
@@ -193,7 +193,7 @@ const QuestionPreview: React.FC<{
                     <div key={key} className={`flex items-start p-3 border rounded-lg transition-colors text-base correct-answer-indicator
                         ${key === question.dogru_cevap 
                             ? 'bg-success-50 border-success-400 text-success-900 font-medium' 
-                            : 'bg-gray-50 border-gray-200 text-text-primary hover:bg-gray-100 hover:border-gray-300'}`
+                            : 'bg-surface border-border text-text-primary hover:bg-worksheet-surface'}`
                         }
                     >
                         <span className="font-bold mr-3">{key})</span> 
@@ -246,7 +246,7 @@ const QuestionPreview: React.FC<{
                 <div>
                     <button 
                         onClick={() => setIsPopoverOpen(!isPopoverOpen)}
-                        className="text-sm text-text-secondary hover:text-primary-600 font-medium py-1 px-3 rounded-md bg-gray-100 hover:bg-gray-200 transition-colors"
+                        className="text-sm text-text-secondary hover:text-primary-600 font-medium py-1 px-3 rounded-md bg-worksheet-surface hover:opacity-80 transition-colors"
                     >
                         <i className="fas fa-star mr-2"></i> Soruyu Değerlendir
                     </button>

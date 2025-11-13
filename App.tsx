@@ -93,7 +93,7 @@ const App: React.FC = () => {
                 <h2 className="text-2xl font-bold text-text-primary mb-6 border-b border-border pb-4">Çalışma Sayfası</h2>
                 <div className="flex-grow flex items-center justify-center">
                 {isLoading && <LoadingSpinner />}
-                {error && <div className="text-red-500 bg-red-100 p-4 rounded-lg w-full text-center">{error}</div>}
+                {error && <div className="text-danger-900 bg-danger-50 p-4 rounded-lg w-full text-center">{error}</div>}
                 {generatedQuestions && generatedQuestions.length > 0 && <QuestionDisplay questions={generatedQuestions} />}
                 {!isLoading && !error && (!generatedQuestions || generatedQuestions.length === 0) && (
                     <div className="text-center text-text-secondary">

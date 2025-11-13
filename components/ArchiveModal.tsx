@@ -56,7 +56,7 @@ export const ArchiveModal: React.FC<ArchiveModalProps> = ({ isOpen, onClose, onL
           ) : (
             <ul className="space-y-3">
               {archivedExams.map((exam) => (
-                <li key={exam.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-border hover:shadow-md transition-shadow">
+                <li key={exam.id} className="flex items-center justify-between p-4 bg-worksheet-surface rounded-lg border border-border hover:shadow-md transition-shadow">
                   <div>
                     <p className="font-semibold text-text-primary">{exam.name}</p>
                     <p className="text-sm text-text-secondary">
@@ -64,7 +64,7 @@ export const ArchiveModal: React.FC<ArchiveModalProps> = ({ isOpen, onClose, onL
                     </p>
                   </div>
                   <div className="flex-shrink-0 space-x-2">
-                    <button onClick={() => handleLoad(exam)} className="px-3 py-1.5 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 transition-colors">
+                    <button onClick={() => handleLoad(exam)} className="px-3 py-1.5 text-sm font-medium text-on-primary bg-primary-600 rounded-md hover:bg-primary-700 transition-colors">
                       <i className="fas fa-upload mr-1"></i> Yükle
                     </button>
                     <button onClick={() => handleDelete(exam.id)} className="px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors">
@@ -77,7 +77,7 @@ export const ArchiveModal: React.FC<ArchiveModalProps> = ({ isOpen, onClose, onL
           )}
         </div>
          <div className="mt-6 text-right border-t border-border pt-4">
-          <button onClick={onClose} className="bg-slate-600 text-white px-5 py-2 rounded-lg hover:bg-slate-700 transition-colors">
+          <button onClick={onClose} className="bg-text-secondary text-surface px-5 py-2 rounded-lg hover:opacity-80 transition-colors">
             Kapat
           </button>
         </div>

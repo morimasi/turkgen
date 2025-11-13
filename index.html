@@ -48,6 +48,7 @@
       --color-primary-100: 226 232 240; --color-primary-600: 71 85 105; --color-primary-700: 51 65 85;
       --color-text-primary: 30 41 59; /* slate-800 */
       --color-text-secondary: 71 85 105; /* slate-600 */
+      --color-text-on-primary: 255 255 255; /* white */
       --color-border: 226 232 240; /* slate-200 */
       --color-ring: 100 116 139; /* slate-500 */
 
@@ -69,16 +70,26 @@
   }
   .theme-slate { /* Varsayılan ile aynı */ }
   .theme-coffee {
-    --color-background: 253 252 251; /* stone-50 */
-    --color-surface: 255 255 255; /* white */
-    --color-worksheet-surface: 245 245 244; /* stone-100 */
-    --color-primary-100: 254 243 199; /* amber-100 */
-    --color-primary-600: 133 77 14; /* amber-800 */
-    --color-primary-700: 113 63 18; /* amber-900 */
-    --color-text-primary: 68 64 60; /* stone-700 */
-    --color-text-secondary: 120 113 108; /* stone-500 */
-    --color-border: 231 229 228; /* stone-200 */
-    --color-ring: 180 83 9; /* amber-700 */
+    --color-background: 38 31 28;
+    --color-surface: 60 49 46;
+    --color-worksheet-surface: 74 63 58;
+    --color-primary-100: 77 56 34;
+    --color-primary-600: 210 153 71;
+    --color-primary-700: 230 184 115;
+    --color-text-primary: 245 239 230;
+    --color-text-secondary: 168 159 148;
+    --color-text-on-primary: 38 31 28;
+    --color-border: 89 77 72;
+    --color-ring: 210 153 71;
+    
+    --color-logo-spark: 252 211 77;
+    
+    --color-success-50: 20 83 45;
+    --color-success-400: 74 222 128;
+    --color-success-900: 187 247 208;
+    --color-danger-50: 127 29 29;
+    --color-danger-400: 248 113 113;
+    --color-danger-900: 254 226 226;
   }
 
   /* Tailwind'in bu değişkenleri kullanmasını sağlayan yardımcı sınıflar */
@@ -95,6 +106,7 @@
   .hover\:text-primary-600:hover { color: rgb(var(--color-primary-600)); }
   .text-text-primary { color: rgb(var(--color-text-primary)); }
   .text-text-secondary { color: rgb(var(--color-text-secondary)); }
+  .text-on-primary { color: rgb(var(--color-text-on-primary)); }
   
   .border-border { border-color: rgb(var(--color-border)); }
   .focus\:ring-primary-500:focus { --tw-ring-color: rgb(var(--color-ring)); }
@@ -110,6 +122,32 @@
   .ring-primary-500 { --tw-ring-color: rgb(var(--color-ring)); }
   .text-primary-active { color: rgb(var(--color-primary-600)); }
   .border-primary-500 { border-color: rgb(var(--color-ring)); }
+  
+  /* Logo Animasyonu */
+  .logo-spark {
+      animation: spark-effect 3s ease-in-out infinite;
+      transform-origin: center;
+  }
+  .logo-book {
+      animation: book-effect 3s ease-in-out infinite;
+      transform-origin: center;
+  }
+
+  @keyframes spark-effect {
+      0%, 100% { transform: scale(0.9) rotate(0deg); opacity: 1; }
+      20% { transform: scale(1.3) rotate(60deg); opacity: 1; }
+      35% { transform: scale(0) rotate(120deg); opacity: 0; }
+      36%, 80% { transform: scale(0) rotate(0deg); opacity: 0; }
+      95% { transform: scale(0.9) rotate(-60deg); opacity: 1; }
+  }
+
+  @keyframes book-effect {
+      0%, 30%, 100% { transform: scale(0) rotate(0deg); opacity: 0; }
+      45% { transform: scale(1.1) rotate(-10deg); opacity: 1; }
+      60% { transform: scale(0.95) rotate(5deg); opacity: 1; }
+      75% { transform: scale(1) rotate(0deg); opacity: 1; }
+      95% { transform: scale(0) rotate(0deg); opacity: 0; }
+  }
   
   /* Diğer Stiller */
   body { font-family: 'Inter', sans-serif; }

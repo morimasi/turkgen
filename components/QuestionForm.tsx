@@ -9,7 +9,7 @@ interface QuestionFormProps {
 
 const AccordionSection: React.FC<{ title: string; children: React.ReactNode; defaultOpen?: boolean }> = ({ title, children, defaultOpen = false }) => (
     <details className="border border-border rounded-lg mb-4 overflow-hidden group rotate-90-on-open" open={defaultOpen}>
-        <summary className="flex items-center justify-between p-3 cursor-pointer bg-slate-50 hover:bg-slate-100 transition-colors">
+        <summary className="flex items-center justify-between p-3 cursor-pointer bg-surface hover:bg-worksheet-surface transition-colors">
             <h3 className="font-semibold text-text-primary">{title}</h3>
             <svg className="w-5 h-5 text-text-secondary transform transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
@@ -67,14 +67,14 @@ const CurriculumSelector: React.FC<{
     return (
         <div className="relative" onMouseLeave={handleMouseLeaveContainer}>
             <div className="border border-border rounded-lg max-h-80 overflow-y-auto bg-surface">
-                <div className="sticky top-0 bg-slate-50 border-b border-border p-2 z-10">
+                <div className="sticky top-0 bg-surface border-b border-border p-2 z-10">
                      <div className="flex items-center">
                         <input
                             type="checkbox"
                             id="select-all-units"
                             checked={units.length > 0 && selectedUnitNos.length === units.length}
                             onChange={(e) => onSelectAllUnits(e.target.checked)}
-                            className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                            className="h-4 w-4 rounded border-border text-primary-600 focus:ring-primary-500"
                         />
                         <label htmlFor="select-all-units" className="ml-2 block text-sm font-semibold text-text-primary">
                             Tüm Üniteleri Seç
@@ -87,7 +87,7 @@ const CurriculumSelector: React.FC<{
                     return (
                         <div 
                             key={unit.no} 
-                            className="flex items-center p-2 border-b border-border last:border-b-0 hover:bg-slate-50 cursor-pointer"
+                            className="flex items-center p-2 border-b border-border last:border-b-0 hover:bg-worksheet-surface cursor-pointer"
                             onMouseEnter={() => handleMouseEnterUnit(unit.no.toString())}
                         >
                              <input
@@ -95,7 +95,7 @@ const CurriculumSelector: React.FC<{
                                 id={`unit-${unit.no}`}
                                 checked={isUnitSelected}
                                 onChange={() => onUnitToggle(unit.no.toString())}
-                                className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                className="h-4 w-4 rounded border-border text-primary-600 focus:ring-primary-500"
                             />
                             <label htmlFor={`unit-${unit.no}`} className="ml-2 flex-grow text-sm font-medium text-text-primary">{unit.name}</label>
                             <svg className="w-5 h-5 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -113,7 +113,7 @@ const CurriculumSelector: React.FC<{
                     onMouseEnter={handlePanelMouseEnter}
                 >
                     <div className="bg-surface border border-border rounded-lg shadow-xl max-h-80 overflow-y-auto">
-                        <div className="sticky top-0 bg-slate-50 border-b border-border p-2">
+                        <div className="sticky top-0 bg-worksheet-surface border-b border-border p-2">
                             <h4 className="font-semibold text-text-primary text-sm truncate mb-2">{activeUnit.name}</h4>
                             <div className="flex items-center">
                                 <input
@@ -121,7 +121,7 @@ const CurriculumSelector: React.FC<{
                                     id={`select-all-obj-${activeUnit.no}`}
                                     checked={activeUnit.objectives.length > 0 && activeUnit.objectives.every(obj => selectedObjectiveCodes.includes(obj.code))}
                                     onChange={(e) => handleSelectAllObjectivesForUnit(activeUnit, e.target.checked)}
-                                    className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                    className="h-4 w-4 rounded border-border text-primary-600 focus:ring-primary-500"
                                 />
                                 <label htmlFor={`select-all-obj-${activeUnit.no}`} className="ml-2 block text-xs font-semibold text-text-secondary">
                                     Tüm Kazanımları Seç
@@ -130,14 +130,14 @@ const CurriculumSelector: React.FC<{
                         </div>
                         <div className="p-2">
                              {activeUnit.objectives.map(obj => (
-                                <div key={obj.code} className="flex items-start p-1.5 rounded-md hover:bg-slate-100">
+                                <div key={obj.code} className="flex items-start p-1.5 rounded-md hover:bg-worksheet-surface">
                                     <input
                                         type="checkbox"
                                         id={obj.code}
                                         value={obj.code}
                                         checked={selectedObjectiveCodes.includes(obj.code)}
                                         onChange={() => onObjectiveToggle(obj.code)}
-                                        className="h-4 w-4 mt-1 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                        className="h-4 w-4 mt-1 rounded border-border text-primary-600 focus:ring-primary-500"
                                     />
                                     <label htmlFor={obj.code} className="ml-2 block text-sm text-text-secondary">
                                         {obj.code} - {obj.text}
@@ -238,7 +238,7 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ onGenerate, isLoadin
                 value={grade}
                 onChange={e => setGrade(e.target.value)}
                 disabled={isLoading}
-                className="block w-full px-3 py-2 bg-surface border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm disabled:bg-gray-100"
+                className="block w-full px-3 py-2 bg-surface border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm disabled:bg-background"
             >
                 {Object.keys(MEB_CURRICULUM).map(g => <option key={g} value={g}>{g}. Sınıf</option>)}
             </select>
@@ -263,7 +263,7 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ onGenerate, isLoadin
                       value={questionType}
                       onChange={e => setQuestionType(e.target.value as QuestionType)}
                       disabled={isLoading}
-                      className="block w-full px-3 py-2 bg-surface border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm disabled:bg-gray-100"
+                      className="block w-full px-3 py-2 bg-surface border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm disabled:bg-background"
                   >
                       <option value="coktan_secmeli">Çoktan Seçmeli</option>
                       <option value="dogru_yanlis">Doğru / Yanlış</option>
@@ -277,7 +277,7 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ onGenerate, isLoadin
                       value={difficulty}
                       onChange={e => setDifficulty(e.target.value as Difficulty)}
                       disabled={isLoading}
-                      className="block w-full px-3 py-2 bg-surface border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm disabled:bg-gray-100"
+                      className="block w-full px-3 py-2 bg-surface border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm disabled:bg-background"
                   >
                       <option value="temel">Temel</option>
                       <option value="orta">Orta</option>
@@ -295,7 +295,7 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ onGenerate, isLoadin
                   min="1"
                   max="50"
                   disabled={isLoading}
-                  className="block w-full px-3 py-2 bg-surface border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm disabled:bg-gray-100"
+                  className="block w-full px-3 py-2 bg-surface border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm disabled:bg-background"
               />
           </div>
        </AccordionSection>
@@ -308,7 +308,7 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ onGenerate, isLoadin
           onChange={e => setCustomInstructions(e.target.value)}
           disabled={isLoading}
           placeholder="Örn: Paragraf bir fabl olsun."
-          className="block w-full px-3 py-2 bg-surface border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm disabled:bg-gray-100"
+          className="block w-full px-3 py-2 bg-surface border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm disabled:bg-background"
         ></textarea>
        </AccordionSection>
       
@@ -316,11 +316,11 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ onGenerate, isLoadin
         <button 
           type="submit" 
           disabled={isLoading || selectedObjectiveCodes.length === 0}
-          className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 ring-primary-500 disabled:bg-primary-300 disabled:cursor-not-allowed transition-colors"
+          className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-on-primary bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 ring-primary-500 disabled:bg-primary-300 disabled:cursor-not-allowed transition-colors"
         >
           {isLoading ? (
             <>
-              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
