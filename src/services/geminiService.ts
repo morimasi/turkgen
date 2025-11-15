@@ -1,35 +1,65 @@
 
 
+
 import type { Question, QuestionGenerationParams } from '../types';
 
-export const generateQuestions = async (params: QuestionGenerationParams): Promise<Question[]> => {
-  try {
+export const generateQuestions = async (
+  params: QuestionGenerationParams,
+  onQuestionReceived: (question: Question) => void
+): Promise<void> => {
     const response = await fetch('/api/generate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(params),
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(params),
     });
 
-    if (!response.ok) {
-      // Sunucudan gelen hata mesajını ayrıştırmaya çalış
-      const errorData = await response.json().catch(() => ({ error: response.statusText }));
-      throw new Error(`Sunucu hatası: ${errorData.error || 'Bilinmeyen bir hata oluştu.'}`);
+    if (!response.ok || !response.body) {
+        const errorData = await response.json().catch(() => ({ error: response.statusText }));
+        throw new Error(`Sunucu hatası: ${errorData.error || 'Bilinmeyen bir hata oluştu.'}`);
     }
 
-    const questions: Question[] = await response.json();
-    return questions;
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
 
-  } catch (error) {
-    console.error("Soru üretme hatası:", error);
-    if (error instanceof Error) {
-        // Kullanıcıya daha anlaşılır bir mesajla hatayı yeniden fırlat
-        throw new Error(`Soru üretilirken bir ağ hatası oluştu. Lütfen internet bağlantınızı kontrol edin veya daha sonra tekrar deneyin.`);
+    while (true) {
+        const { done, value } = await reader.read();
+        
+        if (done) {
+            // Process any remaining data in the buffer when the stream is done
+            if (buffer.trim()) {
+                try {
+                    const question = JSON.parse(buffer);
+                    onQuestionReceived(question);
+                } catch (e) {
+                    console.error("Error parsing final chunk of stream:", e, "Buffer content:", buffer);
+                }
+            }
+            break; // Exit the loop
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        
+        // The last item in the array might be an incomplete line, so we keep it in the buffer.
+        buffer = lines.pop() || ''; 
+
+        for (const line of lines) {
+            if (line.trim()) {
+                try {
+                    const question = JSON.parse(line);
+                    onQuestionReceived(question);
+                } catch (e) {
+                    console.error("Error parsing streamed JSON line:", e, "Line content:", line);
+                    // Skip malformed lines and continue processing the stream
+                }
+            }
+        }
     }
-    throw new Error("Soru üretilirken bilinmeyen bir ağ hatası oluştu.");
-  }
 };
+
 
 export const generateImage = async (prompt: string, quality: 'high' | 'fast'): Promise<string> => {
     try {

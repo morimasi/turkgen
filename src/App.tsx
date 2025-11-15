@@ -11,7 +11,7 @@ import { Notification } from './components/Notification';
 
 
 const App: React.FC = () => {
-  const [generatedQuestions, setGeneratedQuestions] = useState<Question[] | null>(null);
+  const [generatedQuestions, setGeneratedQuestions] = useState<Question[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState<boolean>(false);
@@ -36,11 +36,27 @@ const App: React.FC = () => {
   const handleGenerateQuestion = useCallback(async (params: QuestionGenerationParams) => {
     setIsLoading(true);
     setError(null);
-    setGeneratedQuestions(null);
+    setGeneratedQuestions([]);
+    let questionCounter = 0;
+
     try {
-      const questions = await generateQuestions(params);
-      setGeneratedQuestions(questions);
-      setNotification({ message: `${questions.length} adet soru başarıyla oluşturuldu!`, type: 'success' });
+      await generateQuestions(
+        params,
+        (question: Question) => {
+          // Callback is called for each question from the stream
+          setGeneratedQuestions((prev) => [...prev, question]);
+          questionCounter++;
+        }
+      );
+      // After stream is finished
+      if (questionCounter > 0) {
+        setNotification({ message: `${questionCounter} adet soru başarıyla oluşturuldu!`, type: 'success' });
+      } else {
+        // This case can happen if all generations fail on the backend
+        const errorMessage = "Hiç soru üretilemedi. Lütfen kriterlerinizi gözden geçirin veya tekrar deneyin.";
+        setError(errorMessage);
+        setNotification({ message: errorMessage, type: 'error' });
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Bilinmeyen bir hata oluştu.';
       setError(errorMessage);
@@ -79,10 +95,10 @@ const App: React.FC = () => {
         onLoadExam={handleLoadExamFromArchive}
       />
       <main className="container mx-auto p-4 md:p-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
             {/* Soru Kriterleri Formu - Sol Panel */}
             <div 
-                className="lg:col-span-1 bg-surface p-6 rounded-xl shadow-md border border-border no-print relative z-10 animate-fade-in-slide-up"
+                className="lg:col-span-2 bg-surface p-6 rounded-xl shadow-md border border-border no-print animate-fade-in-slide-up"
                 style={{ animationDelay: '100ms' }}
             >
                 <h2 className="text-2xl font-bold text-text-primary mb-6 border-b border-border pb-4">Soru Kriterleri</h2>
@@ -96,15 +112,15 @@ const App: React.FC = () => {
             >
                 <h2 className="text-2xl font-bold text-text-primary mb-6 border-b border-border pb-4">Çalışma Sayfası</h2>
                 <div className="flex-grow flex items-center justify-center">
-                {isLoading && <LoadingSpinner />}
+                {isLoading && generatedQuestions.length === 0 && <LoadingSpinner />}
                 {error && <div className="text-danger-900 bg-danger-50 p-4 rounded-lg w-full text-center">{error}</div>}
-                {generatedQuestions && generatedQuestions.length > 0 && (
+                {generatedQuestions.length > 0 && (
                     <QuestionDisplay 
                         questions={generatedQuestions} 
                         setNotification={setNotification}
                     />
                 )}
-                {!isLoading && !error && (!generatedQuestions || generatedQuestions.length === 0) && (
+                {!isLoading && !error && generatedQuestions.length === 0 && (
                     <div className="text-center text-text-secondary">
                     <i className="fas fa-file-alt fa-3x mb-4"></i>
                     <p>Yeni bir çalışma sayfası oluşturmak için soldaki formu doldurun.</p>

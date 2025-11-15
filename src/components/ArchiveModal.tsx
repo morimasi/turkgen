@@ -18,6 +18,13 @@ type GroupedExams = {
     }
 };
 
+const ChevronIcon = () => (
+    <svg className="w-5 h-5 text-text-secondary transform transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+    </svg>
+);
+
+
 const ArchiveAccordion: React.FC<{
     groupedExams: GroupedExams;
     onLoad: (exam: ArchivedExam) => void;
@@ -43,62 +50,66 @@ const ArchiveAccordion: React.FC<{
                 const sortedUnitNos = Object.keys(groupedExams[grade]).sort((a,b) => parseInt(a) - parseInt(b));
 
                 return (
-                    <details key={grade} className="border border-border rounded-lg group overflow-hidden">
+                    <details key={grade} className="border border-border rounded-lg group rotate-90-on-open">
                         <summary className="flex items-center justify-between p-3 cursor-pointer bg-surface hover:bg-worksheet-surface transition-colors font-semibold text-text-primary">
                             {grade}. Sınıf
-                            <i className="fas fa-chevron-right transition-transform duration-200 group-open:rotate-90"></i>
+                            <ChevronIcon />
                         </summary>
-                        <div className="bg-background p-2 space-y-2">
-                            {sortedUnitNos.map(unitNo => {
-                                const unit = units.find(u => u.no.toString() === unitNo);
-                                const sortedObjectiveCodes = Object.keys(groupedExams[grade][unitNo]).sort();
+                        <div className="content-wrapper">
+                            <div className="bg-background p-2 space-y-2">
+                                {sortedUnitNos.map(unitNo => {
+                                    const unit = units.find(u => u.no.toString() === unitNo);
+                                    const sortedObjectiveCodes = Object.keys(groupedExams[grade][unitNo]).sort();
 
-                                return (
-                                    <details key={unitNo} className="border border-border rounded-md group/unit overflow-hidden">
-                                        <summary className="flex items-center justify-between p-2 cursor-pointer bg-surface hover:bg-worksheet-surface transition-colors text-sm font-medium text-text-primary">
-                                            Ünite {unitNo}: {unit?.name || 'Bilinmeyen Ünite'}
-                                            <i className="fas fa-chevron-right transition-transform duration-200 group-open/unit:rotate-90 text-xs"></i>
-                                        </summary>
-                                        <div className="bg-background p-2 space-y-2">
-                                            {sortedObjectiveCodes.map(objCode => {
-                                                const objective = unit?.objectives.find(o => o.code === objCode);
-                                                const exams = groupedExams[grade][unitNo][objCode];
-                                                
-                                                return (
-                                                    <div key={objCode} className="bg-surface rounded-md p-2 border border-border">
-                                                        <p className="text-xs font-semibold text-text-secondary mb-2 p-1">{objective?.code} - {objective?.text || 'Bilinmeyen Kazanım'}</p>
-                                                        <ul className="space-y-2">
-                                                            {exams.map(exam => (
-                                                                <li key={exam.id} className="flex items-center justify-between p-2 bg-worksheet-surface rounded-md border border-border hover:shadow-sm transition-shadow">
-                                                                    <div className="flex items-center">
-                                                                        {exam.isSample && <i className="fas fa-star text-yellow-400 text-xs mr-2" title="Örnek Sınav"></i>}
-                                                                        <div>
-                                                                            <p className="font-medium text-text-primary text-sm">{exam.name}</p>
-                                                                            <p className="text-xs text-text-secondary">
-                                                                                {new Date(exam.date).toLocaleDateString('tr-TR')} &bull; {exam.questions.length} soru
-                                                                            </p>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="flex-shrink-0 space-x-2">
-                                                                        <button onClick={() => onLoad(exam)} className="px-2 py-1 text-xs font-medium text-on-primary bg-primary-600 rounded-md hover:bg-primary-700 transition-colors">
-                                                                            <i className="fas fa-upload mr-1"></i> Yükle
-                                                                        </button>
-                                                                        {!exam.isSample && (
-                                                                            <button onClick={() => onDelete(exam.id)} className="px-2 py-1 text-xs font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors">
-                                                                                <i className="fas fa-trash-alt mr-1"></i> Sil
-                                                                            </button>
-                                                                        )}
-                                                                    </div>
-                                                                </li>
-                                                            ))}
-                                                        </ul>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </details>
-                                );
-                            })}
+                                    return (
+                                        <details key={unitNo} className="border border-border rounded-md group/unit rotate-90-on-open">
+                                            <summary className="flex items-center justify-between p-2 cursor-pointer bg-surface hover:bg-worksheet-surface transition-colors text-sm font-medium text-text-primary">
+                                                Ünite {unitNo}: {unit?.name || 'Bilinmeyen Ünite'}
+                                                <ChevronIcon />
+                                            </summary>
+                                            <div className="content-wrapper">
+                                                <div className="bg-background p-2 space-y-2">
+                                                    {sortedObjectiveCodes.map(objCode => {
+                                                        const objective = unit?.objectives.find(o => o.code === objCode);
+                                                        const exams = groupedExams[grade][unitNo][objCode];
+                                                        
+                                                        return (
+                                                            <div key={objCode} className="bg-surface rounded-md p-2 border border-border">
+                                                                <p className="text-xs font-semibold text-text-secondary mb-2 p-1">{objective?.code} - {objective?.text || 'Bilinmeyen Kazanım'}</p>
+                                                                <ul className="space-y-2">
+                                                                    {exams.map(exam => (
+                                                                        <li key={exam.id} className="flex items-center justify-between p-2 bg-worksheet-surface rounded-md border border-border hover:shadow-sm transition-shadow">
+                                                                            <div className="flex items-center">
+                                                                                {exam.isSample && <i className="fas fa-star text-yellow-400 text-xs mr-2" title="Örnek Sınıav"></i>}
+                                                                                <div>
+                                                                                    <p className="font-medium text-text-primary text-sm">{exam.name}</p>
+                                                                                    <p className="text-xs text-text-secondary">
+                                                                                        {new Date(exam.date).toLocaleDateString('tr-TR')} &bull; {exam.questions.length} soru
+                                                                                    </p>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="flex-shrink-0 space-x-2">
+                                                                                <button onClick={() => onLoad(exam)} className="px-2 py-1 text-xs font-medium text-on-primary bg-primary-600 rounded-md hover:bg-primary-700 transition-colors">
+                                                                                    <i className="fas fa-upload mr-1"></i> Yükle
+                                                                                </button>
+                                                                                {!exam.isSample && (
+                                                                                    <button onClick={() => onDelete(exam.id)} className="px-2 py-1 text-xs font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors">
+                                                                                        <i className="fas fa-trash-alt mr-1"></i> Sil
+                                                                                    </button>
+                                                                                )}
+                                                                            </div>
+                                                                        </li>
+                                                                    ))}
+                                                                </ul>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        </details>
+                                    );
+                                })}
+                            </div>
                         </div>
                     </details>
                 );

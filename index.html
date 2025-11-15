@@ -14,6 +14,7 @@
   "imports": {
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "@google/genai": "https://aistudiocdn.com/@google/genai@^1.29.0",
     "jspdf": "https://aistudiocdn.com/jspdf@^2.5.1",
@@ -121,7 +122,6 @@
 
   .ring-primary-500 { --tw-ring-color: rgb(var(--color-ring)); }
   .text-primary-active { color: rgb(var(--color-primary-600)); }
-  .border-primary-500 { border-color: rgb(var(--color-ring)); }
   
   /* Logo Animasyonu */
   .logo-spark {
@@ -243,18 +243,19 @@
   
   /* Akıcı Akordiyon Animasyonu */
   details .content-wrapper {
-      display: grid;
-      grid-template-rows: 0fr;
-      transition: grid-template-rows 0.3s ease-out;
+      max-height: 0;
       overflow: hidden;
+      transition: max-height 0.3s ease-out;
   }
   details[open] .content-wrapper {
-      grid-template-rows: 1fr;
+      max-height: 5000px; /* İçeriğin sığması için yeterince büyük bir değer */
+      transition: max-height 0.5s ease-in;
   }
 </style>
 </head>
   <body class="bg-background">
     <div id="root"></div>
+    <div id="popover-root"></div>
     <script type="module" src="/src/index.tsx"></script>
   </body>
 </html>

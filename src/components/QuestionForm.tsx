@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { MEB_CURRICULUM } from '../constants';
 import type { QuestionGenerationParams, QuestionType, Difficulty, Unit } from '../types';
 
@@ -8,7 +8,7 @@ interface QuestionFormProps {
 }
 
 const AccordionSection: React.FC<{ title: string; children: React.ReactNode; defaultOpen?: boolean }> = ({ title, children, defaultOpen = false }) => (
-    <details className="border border-border rounded-lg mb-4 group rotate-90-on-open overflow-visible" open={defaultOpen}>
+    <details className="border border-border rounded-lg mb-4 group rotate-90-on-open" open={defaultOpen}>
         <summary className="flex items-center justify-between p-3 cursor-pointer bg-surface hover:bg-worksheet-surface transition-colors">
             <h3 className="font-semibold text-text-primary">{title}</h3>
             <svg className="w-5 h-5 text-text-secondary transform transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -32,29 +32,6 @@ const CurriculumSelector: React.FC<{
     onSelectAllUnits: (select: boolean) => void;
 }> = ({ units, selectedUnitNos, selectedObjectiveCodes, onUnitToggle, onObjectiveToggle, onSelectAllUnits }) => {
 
-    const [activeUnitNo, setActiveUnitNo] = useState<string | null>(null);
-    const timeoutRef = useRef<number | null>(null);
-
-    const activeUnit = useMemo(() => {
-        if (!activeUnitNo) return null;
-        return units.find(u => u.no.toString() === activeUnitNo);
-    }, [activeUnitNo, units]);
-
-    const handleMouseEnterUnit = (unitNo: string) => {
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-        setActiveUnitNo(unitNo);
-    };
-
-    const handleMouseLeaveContainer = () => {
-        timeoutRef.current = window.setTimeout(() => {
-            setActiveUnitNo(null);
-        }, 300);
-    };
-
-    const handlePanelMouseEnter = () => {
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-
     const handleSelectAllObjectivesForUnit = (unit: Unit, select: boolean) => {
         unit.objectives.forEach(obj => {
             const isSelected = selectedObjectiveCodes.includes(obj.code);
@@ -67,89 +44,86 @@ const CurriculumSelector: React.FC<{
     };
 
     return (
-        <div className="relative" onMouseLeave={handleMouseLeaveContainer}>
-            <div className="border border-border rounded-lg max-h-80 overflow-y-auto bg-surface">
-                <div className="sticky top-0 bg-surface border-b border-border p-2 z-10">
-                     <div className="flex items-center">
-                        <input
-                            type="checkbox"
-                            id="select-all-units"
-                            checked={units.length > 0 && selectedUnitNos.length === units.length}
-                            onChange={(e) => onSelectAllUnits(e.target.checked)}
-                            className="h-4 w-4 rounded border-border text-primary-600 focus:ring-primary-500"
-                        />
-                        <label htmlFor="select-all-units" className="ml-2 block text-sm font-semibold text-text-primary">
-                            Tüm Üniteleri Seç
-                        </label>
-                    </div>
+        <div className="border border-border rounded-lg max-h-96 overflow-y-auto bg-surface">
+            {/* "Tüm Üniteleri Seç" checkbox at the top */}
+            <div className="sticky top-0 bg-surface border-b border-border p-3 z-10">
+                <div className="flex items-center">
+                    <input
+                        type="checkbox"
+                        id="select-all-units"
+                        checked={units.length > 0 && selectedUnitNos.length === units.length}
+                        onChange={(e) => onSelectAllUnits(e.target.checked)}
+                        className="h-4 w-4 rounded border-border text-primary-600 focus:ring-primary-500"
+                    />
+                    <label htmlFor="select-all-units" className="ml-2 block text-sm font-semibold text-text-primary">
+                        Tüm Üniteleri Seç
+                    </label>
                 </div>
-                {units.map(unit => {
-                    const isUnitSelected = selectedUnitNos.includes(unit.no.toString());
-                    
-                    return (
-                        <div 
-                            key={unit.no} 
-                            className="flex items-center p-2 border-b border-border last:border-b-0 hover:bg-worksheet-surface cursor-pointer"
-                            onMouseEnter={() => handleMouseEnterUnit(unit.no.toString())}
-                        >
-                             <input
-                                type="checkbox"
-                                id={`unit-${unit.no}`}
-                                checked={isUnitSelected}
-                                onChange={() => onUnitToggle(unit.no.toString())}
-                                className="h-4 w-4 rounded border-border text-primary-600 focus:ring-primary-500"
-                            />
-                            <label htmlFor={`unit-${unit.no}`} className="ml-2 flex-grow text-sm font-medium text-text-primary">{unit.name}</label>
-                            <svg className="w-5 h-5 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                            </svg>
-                        </div>
-                    );
-                })}
             </div>
-            
-            {activeUnit && (
-                 <div
-                    className="absolute top-0 left-full ml-2 w-96 z-40 transition-opacity duration-200 animate-fade-in"
-                    style={{ minHeight: '100%' }}
-                    onMouseEnter={handlePanelMouseEnter}
-                >
-                    <div className="bg-surface border border-border rounded-lg shadow-xl max-h-80 overflow-y-auto">
-                        <div className="sticky top-0 bg-worksheet-surface border-b border-border p-2">
-                            <h4 className="font-semibold text-text-primary text-sm truncate mb-2">{activeUnit.name}</h4>
-                            <div className="flex items-center">
+
+            {/* Accordion for each unit */}
+            {units.map(unit => {
+                const isUnitSelected = selectedUnitNos.includes(unit.no.toString());
+                const areAllObjectivesInUnitSelected = unit.objectives.length > 0 && unit.objectives.every(obj => selectedObjectiveCodes.includes(obj.code));
+
+                return (
+                    <details key={unit.no} className="border-b border-border last:border-b-0 group rotate-90-on-open">
+                        <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-worksheet-surface transition-colors">
+                            <div className="flex items-center flex-grow">
                                 <input
                                     type="checkbox"
-                                    id={`select-all-obj-${activeUnit.no}`}
-                                    checked={activeUnit.objectives.length > 0 && activeUnit.objectives.every(obj => selectedObjectiveCodes.includes(obj.code))}
-                                    onChange={(e) => handleSelectAllObjectivesForUnit(activeUnit, e.target.checked)}
+                                    id={`unit-${unit.no}`}
+                                    checked={isUnitSelected}
+                                    onChange={() => onUnitToggle(unit.no.toString())}
                                     className="h-4 w-4 rounded border-border text-primary-600 focus:ring-primary-500"
+                                    onClick={(e) => e.stopPropagation()} // Prevent accordion from toggling when checkbox is clicked
                                 />
-                                <label htmlFor={`select-all-obj-${activeUnit.no}`} className="ml-2 block text-xs font-semibold text-text-secondary">
-                                    Tüm Kazanımları Seç
-                                </label>
+                                <label htmlFor={`unit-${unit.no}`} className="ml-2 flex-grow text-sm font-medium text-text-primary cursor-pointer">{unit.name}</label>
                             </div>
-                        </div>
-                        <div className="p-2">
-                             {activeUnit.objectives.map(obj => (
-                                <div key={obj.code} className="flex items-start p-1.5 rounded-md hover:bg-worksheet-surface">
+                            <svg className="w-5 h-5 text-text-secondary transform transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </summary>
+                        
+                        <div className="content-wrapper">
+                           <div className="p-3 bg-background border-t border-border">
+                                {/* "Select All Objectives" for this specific unit */}
+                                <div className="flex items-center mb-3 p-2 bg-surface rounded-md border border-border">
                                     <input
                                         type="checkbox"
-                                        id={obj.code}
-                                        value={obj.code}
-                                        checked={selectedObjectiveCodes.includes(obj.code)}
-                                        onChange={() => onObjectiveToggle(obj.code)}
-                                        className="h-4 w-4 mt-1 rounded border-border text-primary-600 focus:ring-primary-500"
+                                        id={`select-all-obj-${unit.no}`}
+                                        checked={areAllObjectivesInUnitSelected}
+                                        onChange={(e) => handleSelectAllObjectivesForUnit(unit, e.target.checked)}
+                                        className="h-4 w-4 rounded border-border text-primary-600 focus:ring-primary-500"
                                     />
-                                    <label htmlFor={obj.code} className="ml-2 block text-sm text-text-secondary">
-                                        {obj.code} - {obj.text}
+                                    <label htmlFor={`select-all-obj-${unit.no}`} className="ml-2 block text-xs font-semibold text-text-secondary">
+                                        Bu Ünitenin Tüm Kazanımlarını Seç
                                     </label>
                                 </div>
-                            ))}
+
+                                {/* Objectives list */}
+                                <div className="space-y-1">
+                                    {unit.objectives.map(obj => (
+                                        <div key={obj.code} className="flex items-start p-1.5 rounded-md hover:bg-surface">
+                                            <input
+                                                type="checkbox"
+                                                id={obj.code}
+                                                value={obj.code}
+                                                checked={selectedObjectiveCodes.includes(obj.code)}
+                                                onChange={() => onObjectiveToggle(obj.code)}
+                                                className="h-4 w-4 mt-1 rounded border-border text-primary-600 focus:ring-primary-500"
+                                            />
+                                            <label htmlFor={obj.code} className="ml-2 block text-sm text-text-secondary">
+                                                {obj.code} - {obj.text}
+                                            </label>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-            )}
+                    </details>
+                );
+            })}
         </div>
     );
 };
