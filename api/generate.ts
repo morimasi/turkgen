@@ -24,41 +24,43 @@ export default async function handler(req: any, res: any) {
         const params: QuestionGenerationParams = req.body;
         const ai = new GoogleGenAI({ apiKey });
 
-        const generationPromises = Array.from({ length: params.questionCount }).map((_, index) => {
-            const singlePrompt = createSingleQuestionPrompt(params, index + 1, params.questionCount);
+        // Generate questions sequentially to avoid hitting rate limits
+        for (let i = 0; i < params.questionCount; i++) {
+            const singlePrompt = createSingleQuestionPrompt(params, i + 1, params.questionCount);
             
-            return ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: singlePrompt,
-                config: {
-                    systemInstruction: systemInstruction,
-                    responseMimeType: "application/json",
-                    responseSchema: questionSchema, // Use single question schema
-                }
-            }).then(response => {
-                const jsonString = response.text?.trim();
+            try {
+                const response = await ai.models.generateContent({
+                    model: 'gemini-2.5-flash',
+                    contents: singlePrompt,
+                    config: {
+                        systemInstruction: systemInstruction,
+                        responseMimeType: "application/json",
+                        responseSchema: questionSchema,
+                    }
+                });
+
+                let jsonString = response.text?.trim();
+                
                 if (jsonString) {
+                    // Cleanup: Remove markdown code blocks if the model includes them
+                    jsonString = jsonString.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
+                    
                     try {
-                        // Validate that the response is a valid JSON object before sending
+                        // Validate JSON before sending
                         JSON.parse(jsonString);
                         res.write(jsonString + '\n');
                     } catch (e) {
-                         console.error(`Received invalid JSON from API for question ${index + 1}:`, jsonString, e);
+                         console.error(`Received invalid JSON from API for question ${i + 1}:`, jsonString, e);
                     }
                 }
-            }).catch(error => {
-                console.error(`Error generating question ${index + 1}:`, error);
-                // Don't write anything to stream for failed questions, they will be skipped on the client.
-            });
-        });
-
-        await Promise.all(generationPromises);
+            } catch (error) {
+                console.error(`Error generating question ${i + 1}:`, error);
+                // Continue to the next question loop even if one fails
+            }
+        }
 
     } catch (error: any) {
         console.error("Error in /api/generate stream setup:", error);
-        // This error is for issues before streaming starts (e.g., parsing request body)
-        // Since headers are already flushed, we can't send a JSON error.
-        // We just log it and end the stream.
     } finally {
         res.end();
     }
