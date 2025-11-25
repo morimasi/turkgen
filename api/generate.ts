@@ -24,38 +24,55 @@ export default async function handler(req: any, res: any) {
         const params: QuestionGenerationParams = req.body;
         const ai = new GoogleGenAI({ apiKey });
 
-        // Generate questions sequentially to avoid hitting rate limits
+        // Generate questions sequentially to avoid hitting rate limits, with retry logic
         for (let i = 0; i < params.questionCount; i++) {
             const singlePrompt = createSingleQuestionPrompt(params, i + 1, params.questionCount);
             
-            try {
-                const response = await ai.models.generateContent({
-                    model: 'gemini-2.5-flash',
-                    contents: singlePrompt,
-                    config: {
-                        systemInstruction: systemInstruction,
-                        responseMimeType: "application/json",
-                        responseSchema: questionSchema,
-                    }
-                });
+            let success = false;
+            const MAX_ATTEMPTS = 2; // Initial try + 1 retry
 
-                let jsonString = response.text?.trim();
-                
-                if (jsonString) {
-                    // Cleanup: Remove markdown code blocks if the model includes them
-                    jsonString = jsonString.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
+            for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+                try {
+                    const response = await ai.models.generateContent({
+                        model: 'gemini-2.5-flash',
+                        contents: singlePrompt,
+                        config: {
+                            systemInstruction: systemInstruction,
+                            responseMimeType: "application/json",
+                            responseSchema: questionSchema,
+                        }
+                    });
+
+                    let jsonString = response.text?.trim();
                     
-                    try {
-                        // Validate JSON before sending
-                        JSON.parse(jsonString);
-                        res.write(jsonString + '\n');
-                    } catch (e) {
-                         console.error(`Received invalid JSON from API for question ${i + 1}:`, jsonString, e);
+                    if (jsonString) {
+                        // Cleanup: Remove markdown code blocks if the model includes them
+                        jsonString = jsonString.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
+                        
+                        try {
+                            // Validate JSON before sending
+                            JSON.parse(jsonString);
+                            res.write(jsonString + '\n');
+                            success = true;
+                            break; // Success, exit retry loop
+                        } catch (e) {
+                             console.error(`Attempt ${attempt} for Q${i + 1} failed: Invalid JSON received.`, jsonString, e);
+                             // Let it retry
+                        }
+                    } else {
+                        console.error(`Attempt ${attempt} for Q${i + 1} failed: Empty response from API.`);
                     }
+                } catch (error) {
+                    console.error(`Attempt ${attempt} for Q${i + 1} failed with API error:`, error);
                 }
-            } catch (error) {
-                console.error(`Error generating question ${i + 1}:`, error);
-                // Continue to the next question loop even if one fails
+
+                if (attempt < MAX_ATTEMPTS) {
+                    await new Promise(resolve => setTimeout(resolve, 500)); // Wait before retrying
+                }
+            }
+
+            if (!success) {
+                 console.error(`All ${MAX_ATTEMPTS} attempts failed for question ${i + 1}. Skipping.`);
             }
         }
 

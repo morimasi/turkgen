@@ -188,29 +188,34 @@ export const QuestionForm: React.FC<QuestionFormProps> = ({ onGenerate, isLoadin
   };
   
   const handleObjectiveToggle = (objCode: string) => {
-    // Tıklanan kazanımın ait olduğu üniteyi bul.
+    const isCurrentlySelected = selectedObjectiveCodes.includes(objCode);
+    const newSelectedObjectiveCodes = isCurrentlySelected
+        ? selectedObjectiveCodes.filter(c => c !== objCode)
+        : [...selectedObjectiveCodes, objCode];
+    
+    setSelectedObjectiveCodes(newSelectedObjectiveCodes);
+
     const parentUnit = availableUnits.find(unit => 
         unit.objectives.some(obj => obj.code === objCode)
     );
 
-    // Kazanımın mevcut seçim durumunu kontrol et.
-    const isCurrentlySelected = selectedObjectiveCodes.includes(objCode);
+    if (!parentUnit) return;
 
-    // Kazanım seçim durumunu güncelle (kaldır veya ekle).
-    setSelectedObjectiveCodes(prev => 
-        isCurrentlySelected 
-            ? prev.filter(code => code !== objCode) 
-            : [...prev, objCode]
-    );
+    const parentUnitNoStr = parentUnit.no.toString();
 
-    // Eğer kazanım YENİ SEÇİLDİYSE ve ait olduğu ünite zaten seçili değilse, üniteyi de seç.
-    if (!isCurrentlySelected && parentUnit) {
+    if (isCurrentlySelected) {
+        // Objective was deselected. Check if it's the last one in its unit.
+        const hasOtherSelected = parentUnit.objectives.some(obj => newSelectedObjectiveCodes.includes(obj.code));
+        if (!hasOtherSelected) {
+            setSelectedUnitNos(prev => prev.filter(uNo => uNo !== parentUnitNoStr));
+        }
+    } else {
+        // Objective was selected. Ensure its parent unit is selected.
         setSelectedUnitNos(prev => {
-            const parentUnitNo = parentUnit.no.toString();
-            if (!prev.includes(parentUnitNo)) {
-                return [...prev, parentUnitNo];
+            if (!prev.includes(parentUnitNoStr)) {
+                return [...prev, parentUnitNoStr];
             }
-            return prev; // Ünite zaten seçiliyse bir şey yapma
+            return prev;
         });
     }
   };
