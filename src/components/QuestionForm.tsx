@@ -67,61 +67,63 @@ const CurriculumSelector: React.FC<{
                 const areAllObjectivesInUnitSelected = unit.objectives.length > 0 && unit.objectives.every(obj => selectedObjectiveCodes.includes(obj.code));
 
                 return (
-                    <details key={unit.no} className="border-b border-border last:border-b-0 group rotate-90-on-open">
-                        <summary className="flex items-center justify-between p-3 cursor-pointer hover:bg-worksheet-surface transition-colors">
-                            <div className="flex items-center flex-grow">
-                                <input
-                                    type="checkbox"
-                                    id={`unit-${unit.no}`}
-                                    checked={isUnitSelected}
-                                    onChange={() => onUnitToggle(unit.no.toString())}
-                                    className="h-4 w-4 rounded border-border text-primary-600 focus:ring-primary-500"
-                                    onClick={(e) => e.stopPropagation()} // Prevent accordion from toggling when checkbox is clicked
-                                />
-                                <label htmlFor={`unit-${unit.no}`} className="ml-2 flex-grow text-sm font-medium text-text-primary cursor-pointer">{unit.name}</label>
-                            </div>
-                            <svg className="w-5 h-5 text-text-secondary transform transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                            </svg>
-                        </summary>
-                        
-                        <div className="content-wrapper">
-                           <div className="p-3 bg-background border-t border-border">
-                                {/* "Select All Objectives" for this specific unit */}
-                                <div className="flex items-center mb-3 p-2 bg-surface rounded-md border border-border">
-                                    <input
-                                        type="checkbox"
-                                        id={`select-all-obj-${unit.no}`}
-                                        checked={areAllObjectivesInUnitSelected}
-                                        onChange={(e) => handleSelectAllObjectivesForUnit(unit, e.target.checked)}
-                                        className="h-4 w-4 rounded border-border text-primary-600 focus:ring-primary-500"
-                                    />
-                                    <label htmlFor={`select-all-obj-${unit.no}`} className="ml-2 block text-xs font-semibold text-text-secondary">
-                                        Bu Ünitenin Tüm Kazanımlarını Seç
-                                    </label>
-                                </div>
-
-                                {/* Objectives list */}
-                                <div className="space-y-1">
-                                    {unit.objectives.map(obj => (
-                                        <div key={obj.code} className="flex items-start p-1.5 rounded-md hover:bg-surface">
-                                            <input
-                                                type="checkbox"
-                                                id={obj.code}
-                                                value={obj.code}
-                                                checked={selectedObjectiveCodes.includes(obj.code)}
-                                                onChange={() => onObjectiveToggle(obj.code)}
-                                                className="h-4 w-4 mt-1 rounded border-border text-primary-600 focus:ring-primary-500"
-                                            />
-                                            <label htmlFor={obj.code} className="ml-2 block text-sm text-text-secondary">
-                                                {obj.code} - {obj.text}
-                                            </label>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                    <div key={unit.no} className="flex items-center border-b border-border last:border-b-0">
+                        <div className="pl-3">
+                            <input
+                                type="checkbox"
+                                id={`unit-${unit.no}`}
+                                aria-labelledby={`unit-label-${unit.no}`}
+                                checked={isUnitSelected}
+                                onChange={() => onUnitToggle(unit.no.toString())}
+                                className="h-4 w-4 rounded border-border text-primary-600 focus:ring-primary-500"
+                            />
                         </div>
-                    </details>
+                        <details className="flex-grow group rotate-90-on-open">
+                            <summary className="flex w-full items-center justify-between p-3 cursor-pointer hover:bg-worksheet-surface list-none">
+                                <span id={`unit-label-${unit.no}`} className="text-sm font-medium text-text-primary">{unit.name}</span>
+                                <svg className="w-5 h-5 text-text-secondary transform transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </summary>
+                            
+                            <div className="content-wrapper">
+                               <div className="p-3 bg-background border-t border-border">
+                                    {/* "Select All Objectives" for this specific unit */}
+                                    <div className="flex items-center mb-3 p-2 bg-surface rounded-md border border-border">
+                                        <input
+                                            type="checkbox"
+                                            id={`select-all-obj-${unit.no}`}
+                                            checked={areAllObjectivesInUnitSelected}
+                                            onChange={(e) => handleSelectAllObjectivesForUnit(unit, e.target.checked)}
+                                            className="h-4 w-4 rounded border-border text-primary-600 focus:ring-primary-500"
+                                        />
+                                        <label htmlFor={`select-all-obj-${unit.no}`} className="ml-2 block text-xs font-semibold text-text-secondary">
+                                            Bu Ünitenin Tüm Kazanımlarını Seç
+                                        </label>
+                                    </div>
+
+                                    {/* Objectives list */}
+                                    <div className="space-y-1">
+                                        {unit.objectives.map(obj => (
+                                            <div key={obj.code} className="flex items-start p-1.5 rounded-md hover:bg-surface">
+                                                <input
+                                                    type="checkbox"
+                                                    id={obj.code}
+                                                    value={obj.code}
+                                                    checked={selectedObjectiveCodes.includes(obj.code)}
+                                                    onChange={() => onObjectiveToggle(obj.code)}
+                                                    className="h-4 w-4 mt-1 rounded border-border text-primary-600 focus:ring-primary-500"
+                                                />
+                                                <label htmlFor={obj.code} className="ml-2 block text-sm text-text-secondary">
+                                                    {obj.code} - {obj.text}
+                                                </label>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </details>
+                    </div>
                 );
             })}
         </div>
