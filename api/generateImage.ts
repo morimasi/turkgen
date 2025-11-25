@@ -1,5 +1,3 @@
-
-
 import { GoogleGenAI, Modality } from "@google/genai";
 
 // Vercel Serverless Function for Node.js runtime
@@ -32,9 +30,15 @@ export default async function handler(req: any, res: any) {
                     responseModalities: [Modality.IMAGE],
                 },
             });
-            const part = response.candidates?.[0]?.content?.parts?.[0];
-            if (part && part.inlineData) {
-                base64ImageBytes = part.inlineData.data;
+            
+            // Iterate through parts to find the image data
+            if (response.candidates?.[0]?.content?.parts) {
+                for (const part of response.candidates[0].content.parts) {
+                    if (part.inlineData) {
+                        base64ImageBytes = part.inlineData.data;
+                        break;
+                    }
+                }
             }
         
         } else {

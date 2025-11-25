@@ -1,5 +1,3 @@
-
-
 import { GoogleGenAI, Type } from "@google/genai";
 import type { Question, QuestionGenerationParams } from '../src/types';
 
@@ -30,7 +28,7 @@ export default async function handler(req: any, res: any) {
             const singlePrompt = createSingleQuestionPrompt(params, index + 1, params.questionCount);
             
             return ai.models.generateContent({
-                model: 'gemini-flash-latest',
+                model: 'gemini-2.5-flash',
                 contents: singlePrompt,
                 config: {
                     systemInstruction: systemInstruction,

@@ -357,16 +357,18 @@ const QuestionPreview: React.FC<{
                  {settings.showQuestionNumbers && <strong className="mr-2">{index + 1}.</strong>}
                 {question.soru_metni}
             </p>
-            {(question.paragraf_metni) && !generatedImage && (
+            {question.paragraf_metni && (
                  <div ref={imageButtonRef} className="no-print ml-4 flex-shrink-0 relative">
                      <button 
                         onClick={() => setIsImageSettingsOpen(prev => !prev)}
                         disabled={isImageLoading}
                         className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md transition-colors shadow-sm bg-surface text-text-secondary hover:bg-worksheet-surface border border-border disabled:opacity-50 disabled:cursor-wait"
-                        title="Soru için görsel oluştur"
+                        title={generatedImage ? "Görseli Değiştir" : "Soru için görsel oluştur"}
                     >
                         {isImageLoading ? (
                             <><i className="fas fa-spinner fa-spin fa-fw"></i><span>Oluşturuluyor...</span></>
+                        ) : generatedImage ? (
+                            <><i className="fas fa-sync-alt fa-fw"></i><span>Değiştir</span></>
                         ) : (
                             <><i className="fas fa-magic fa-fw"></i><span>Görselleştir</span></>
                         )}
