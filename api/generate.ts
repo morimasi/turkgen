@@ -110,32 +110,57 @@ const questionSchema = {
     ]
 };
 
-const systemInstruction = `Sen, Türk Dili ve Edebiyatı alanında uzmanlaşmış, ölçme-değerlendirme ve bilişsel pedagoji konularında derinlemesine bilgi sahibi bir Türk Dili Profesörüsün. Temel görevin, 2025 Millî Eğitim Bakanlığı (MEB) Türkçe Dersi Öğretim Programı'nın ruhuna ve hedeflerine sadık kalarak, ortaokul seviyesindeki (4-8. sınıflar) öğrenciler için akademik geçerliliği ve güvenirliği yüksek, özgün ve yenilikçi sorular tasarlamaktır. Hazırlayacağın her soru, sadece müfredat kazanımlarını ölçmekle kalmamalı, aynı zamanda öğrencilerin üst düzey düşünme becerilerini (analiz, sentez, değerlendirme), eleştirel okuryazarlık yetilerini ve metinlerarası bağlantı kurma kapasitelerini de harekete geçirmelidir. Çıktıların, talep edilen JSON formatına harfiyen uymalı; format dışında hiçbir yorum, açıklama veya ek metin içermemelidir. Akademik titizlik ve pedagojik mükemmellik, çalışmalarının temelini oluşturmalıdır.`;
+const systemInstruction = `Sen, Türk Dili ve Edebiyatı alanında uzman, ölçme-değerlendirme ve bilişsel pedagoji bilgisi yüksek bir Türk Dili Profesörüsün. Görevin, 2025 MEB Türkçe Dersi Öğretim Programı'na tam uyumlu, sınıf seviyesine göre gerçekçi ve pedagojik değeri yüksek sorular üretmek. Tüm çıktıların **yalnızca JSON** olmalı, format dışı hiçbir metin eklenmemeli.
+
+Üretim Playbooku:
+- Seviye kalibrasyonu: "temel" (hatırlama-anlama, doğrudan kazanım), "orta" (uygulama-analiz, iki adımlı akıl yürütme), "ileri" (değerlendirme-yaratma, transfer ve çoklu ipucu).
+- Kazanım eşlemesi: Her soru tek bir kazanım kodu ve metniyle birebir örtüşmeli; başka kazanımları ölçen ifadeler ekleme.
+- Ünite tutarlılığı: Senaryo, metin ve bağlam seçilen ünitenin temasıyla uyumlu, öğrencinin günlük yaşamına yakın olmalı.
+- Dil ve yaş düzeyi: Sınıf seviyesine uygun, açık ve ölçmeye odaklı cümleler kullan.
+- Soru tipi kuralları: Tip gereksinimlerine uy, çeldiricileri yaygın yanılgılara dayandır, cevap tek ve tartışmasız olsun.
+
+Kalite kontrol (iç denetim): JSON üretmeden önce her soru için şu kontrol listesini uygula:
+1) sınıf, ünite, kazanım kodu/metni verilen listeden ve aynı sınıf seviyesinde mi?
+2) soru_tipi ve secenek yapısı tip kurallarına uyuyor mu?
+3) zorluk seviyesi verilen hedefle uyumlu bilişsel talep barındırıyor mu?
+4) gercek_yasam_baglantisi ve cozum_anahtari sahici, kısa ve uygulanabilir mi?
+5) paragraf_metni gerekiyorsa doğal, tekrarsız ve yaşa uygun mu?
+Kontrolden geçmeyen soruyu düzelt, JSON'a ekleme.`;
 
 const createBatchQuestionPrompt = (params: QuestionGenerationParams): string => {
   const objectivesText = params.objectives.map(o => `- ${o.code} ${o.text}`).join('\n');
   const unitsText = params.units.map(u => `- ${u.no}. Ünite: ${u.name}`).join('\n');
 
   return `
-Aşağıdaki kriterlere ve kurallara göre toplam **${params.questionCount} adet** Türkçe sorusu oluştur ve cevabını bu soruları içeren **tek bir JSON dizisi (array)** formatında döndür.
+Aşağıdaki kriterlere göre **${params.questionCount} adet** Türkçe sorusu tasarla ve cevabı **tek bir JSON dizisi** olarak döndür.
 
-**Kriterler:**
+Kriterler:
 - Sınıf: ${params.grade}
-- Kapsamdaki Üniteler:\n${unitsText}
-- Kapsamdaki Kazanımlar:\n${objectivesText}
-- Soru Tipi: "${params.questionType}" (Tüm sorular bu tipte olmalı)
-- Zorluk Seviyesi: "${params.difficulty}" (Tüm sorular bu seviyede olmalı)
+- Üniteler:\n${unitsText}
+- Kazanımlar:\n${objectivesText}
+- Soru Tipi: "${params.questionType}" (tüm sorular için)
+- Zorluk Seviyesi: "${params.difficulty}" (tüm sorular için)
 ${params.customInstructions ? `- Ek Talimatlar: "${params.customInstructions}"` : ''}
 
-**Önemli Kurallar:**
-1.  **Tek JSON Dizisi:** Çıktın, **sadece ve sadece ${params.questionCount} adet soru nesnesi içeren tek bir JSON dizisi** olmalıdır. Dizi dışında hiçbir metin, açıklama veya not içermemelidir. Schema'ya tam uy.
-2.  **Kazanım Odaklılık:** Her soru, sağlanan "Kapsamdaki Kazanımlar" listesindeki kazanımlardan **bir tanesine** odaklanmalıdır. Her sorunun \`kazanim_kodu\` ve \`kazanim_metni\` alanları listedeki kazanımlardan biriyle eşleşmelidir. Listelenen farklı kazanımlardan çeşitli sorular üretmeye çalış.
-3.  **Özgünlük:** Tüm sorular, paragraflar ve seçenekler tamamen özgün olmalı ve birbirini tekrar etmemelidir.
-4.  **Soru Tiplerine Göre:**
-    -   'coktan_secmeli': 'secenekler' bir obje, 'yanlis_secenek_tipleri' 3 elemanlı bir dizi ve 'dogru_cevap' doğru seçeneğin harfi (A, B, C, D) olmalıdır. Çeldiriciler mantıklı ve güçlü olmalı.
-    -   'dogru_yanlis': 'secenekler' ve 'yanlis_secenek_tipleri' null olmalı. 'soru_metni' bir yargı cümlesi olmalı. 'dogru_cevap' "Doğru" veya "Yanlış" metni olmalıdır.
-    -   'bosluk_doldurma': 'secenekler' ve 'yanlis_secenek_tipleri' null olmalı. 'soru_metni' içindeki boşluk '___' ile belirtilmeli. 'dogru_cevap' boşluğa gelecek doğru ifade olmalıdır.
-5.  **Pedagojik Derinlik:** Her bir soru nesnesi, \`yanlis_secenek_tipleri\`, \`gercek_yasam_baglantisi\`, \`cozum_anahtari\` gibi pedagojik alanları eksiksiz ve kaliteli bir şekilde doldurmalıdır.
+Zorluk tanımları:
+- "temel": bilgi/hatırlama, doğrudan kazanım ifadesi, tek adımlı akıl yürütme.
+- "orta": uygulama/analiz, metin veya senaryodan ipucu çekme, iki adım.
+- "ileri": değerlendirme/yorumlama/yaratma, transfer, birden çok ipucu ve çeldirici kontrolü.
 
-Lütfen şimdi istenen ${params.questionCount} adet soruyu içeren JSON dizisini oluştur.`;
+Üretim adımları:
+1. Her soru için sağlanan kazanımlardan **yalnızca birini** seç, \`kazanim_kodu\` ve \`kazanim_metni\` alanını aynen kullan.
+2. Seçtiğin kazanım ve ünitenin temasına uygun, öğrencinin günlük yaşamına benzeyen kısa bir bağlam belirle (paragraf_metni gerekiyorsa doğal ve sınıf seviyesine uygun olsun).
+3. Zorluk tanımına göre bilişsel talebi ayarla; çok kolay ya da sınıf üstü kavram ekleme.
+4. Soru metnini açık, ölçmeye dönük ve tipine uygun yaz.
+5. Çeldiricileri (coktan_secmeli) yaygın yanılgılara dayandır, birbirinden ve doğru cevaptan net ayr.
+
+Tip kuralları:
+- 'coktan_secmeli': 'secenekler' 4 seçenekli obje, 'yanlis_secenek_tipleri' 3 pedagojik çeldirici açıklaması, 'dogru_cevap' harf (A, B, C, D).
+- 'dogru_yanlis': 'secenekler' ve 'yanlis_secenek_tipleri' null, 'soru_metni' yargı cümlesi, 'dogru_cevap' "Doğru" ya da "Yanlış".
+- 'bosluk_doldurma': 'secenekler' ve 'yanlis_secenek_tipleri' null, 'soru_metni' içindeki boşluk '___', 'dogru_cevap' boşluğu dolduran ifade.
+
+Son kontroller:
+- Her soru farklı ve tekrar içermiyor.
+- Gerçek_yasam_baglantisi ve cozum_anahtari kısa ama sahici.
+- JSON dizi dışında hiçbir şey yazma; tam olarak ${params.questionCount} nesne üret.`;
 };
