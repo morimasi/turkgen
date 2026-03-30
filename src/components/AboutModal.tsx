@@ -18,7 +18,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
         </div>
         <div className="mt-4 space-y-4 text-text-secondary max-h-[70vh] overflow-y-auto pr-2">
           <p>
-            Bu uygulama, Türkiye Millî Eğitim Bakanlığı (MEB) müfredatına hakim, deneyimli bir ortaokul Türkçe öğretmeni ve ölçme-değerlendirme uzmanı gibi davranan bir yapay zeka modeli kullanarak, 4., 5., 6., 7. ve 8. sınıflar için nitelikli Türkçe soruları üretmek amacıyla tasarlanmıştır.
+            Bu uygulama, Türkiye Millî Eğitim Bakanlığı (MEB) müfredatına hakim, deneyimli bir Türkçe öğretmeni ve ölçme-değerlendirme uzmanı gibi davranan bir yapay zeka modeli kullanarak, ilkokul ve ortaokul (1-8. sınıflar) için nitelikli Türkçe soruları üretmek amacıyla tasarlanmıştır.
           </p>
           <h3 className="text-lg font-semibold text-text-primary pt-2">Pedagojik İlkeler</h3>
           <p>

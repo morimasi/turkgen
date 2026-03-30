@@ -1,6 +1,109 @@
 import type { Curriculum } from '../types';
 
 export const MEB_CURRICULUM: Curriculum = {
+  '1': {
+    units: [
+      {
+        no: 1,
+        name: "Okuma",
+        objectives: [
+          { code: "T.1.3.1.", text: "Harfi tanır ve seslendirir." },
+          { code: "T.1.3.2.", text: "Heceleri okur." },
+          { code: "T.1.3.3.", text: "Kelimeleri okur." },
+          { code: "T.1.3.4.", text: "Cümleleri okur." },
+          { code: "T.1.3.5.", text: "Kısa metinleri okur." },
+        ]
+      },
+      {
+        no: 2,
+        name: "Yazma",
+        objectives: [
+          { code: "T.1.4.1.", text: "Harfleri kuralına uygun yazar." },
+          { code: "T.1.4.2.", text: "Heceler oluşturur ve yazar." },
+          { code: "T.1.4.3.", text: "Kelimeler yazar." },
+          { code: "T.1.4.4.", text: "Cümleler yazar." },
+          { code: "T.1.4.5.", text: "Büyük harfleri ve noktalama işaretlerini (nokta, virgül, soru işareti) uygun yerlerde kullanır." },
+        ]
+      },
+      {
+        no: 3,
+        name: "Dinleme/İzleme ve Konuşma",
+        objectives: [
+          { code: "T.1.1.1.", text: "Dinlediklerinde/izlediklerinde geçen olayların gelişimini ve sonucunu tahmin eder." },
+          { code: "T.1.1.2.", text: "Dinlediklerini/izlediklerini anlar." },
+          { code: "T.1.2.1.", text: "Kelimeleri anlamlarına uygun kullanır." },
+          { code: "T.1.2.2.", text: "Çerçevesi belirli bir konu hakkında konuşur." },
+        ]
+      }
+    ]
+  },
+  '2': {
+    units: [
+      {
+        no: 1,
+        name: "Sözcükte Anlam",
+        objectives: [
+          { code: "T.2.3.9.", text: "Kelimelerin zıt anlamlılarını bulur." },
+          { code: "T.2.3.10.", text: "Kelimelerin eş anlamlılarını tahmin eder." },
+          { code: "T.2.3.11.", text: "Görselden/görsellerden hareketle bilmediği kelimelerin anlamlarını tahmin eder." },
+        ]
+      },
+      {
+        no: 2,
+        name: "Metinde Anlam (Okuma Anlama)",
+        objectives: [
+          { code: "T.2.3.14.", text: "Okuduğu metnin konusunu belirler." },
+          { code: "T.2.3.15.", text: "Okuduğu metnin ana fikrini/ana duygusunu belirler." },
+          { code: "T.2.3.16.", text: "Okuduğu metinle ilgili soruları cevaplar." },
+          { code: "T.2.3.17.", text: "Metinle ilgili sorular sorar." },
+          { code: "T.2.3.13.", text: "Görsellerden hareketle okuyacağı metnin konusunu tahmin eder." },
+        ]
+      },
+      {
+        no: 3,
+        name: "Yazım ve Noktalama",
+        objectives: [
+          { code: "T.2.4.16.", text: "Büyük harfleri ve noktalama işaretlerini uygun yerlerde kullanır." },
+          { code: "T.2.4.17.", text: "Yazdıklarını düzenler (Yazım ve noktalama kuralları)." },
+          { code: "T.2.4.8.", text: "Anlamlı ve kurallı cümleler yazar." },
+        ]
+      }
+    ]
+  },
+  '3': {
+    units: [
+      {
+        no: 1,
+        name: "Sözcükte Anlam",
+        objectives: [
+          { code: "T.3.3.11.", text: "Kelimelerin eş anlamlılarını bulur." },
+          { code: "T.3.3.12.", text: "Kelimelerin zıt anlamlılarını bulur." },
+          { code: "T.3.3.13.", text: "Eş sesli kelimelerin anlamlarını ayırt eder." },
+          { code: "T.3.3.10.", text: "Görselden/görsellerden hareketle bilmediği kelimelerin anlamlarını tahmin eder." },
+        ]
+      },
+      {
+        no: 2,
+        name: "Metinde Anlam (Okuma Anlama)",
+        objectives: [
+          { code: "T.3.3.18.", text: "Okuduğu metnin konusunu belirler." },
+          { code: "T.3.3.19.", text: "Okuduğu metnin ana fikrini/ana duygusunu belirler." },
+          { code: "T.3.3.20.", text: "Okuduğu metinle ilgili soruları cevaplar." },
+          { code: "T.3.3.21.", text: "Metindeki hikâye unsurlarını (şahıs ve varlık kadrosu, mekân, zaman, olay) belirler." },
+          { code: "T.3.3.22.", text: "Metnin içeriğine uygun başlık/başlıklar belirler." },
+        ]
+      },
+      {
+        no: 3,
+        name: "Yazım ve Noktalama",
+        objectives: [
+          { code: "T.3.4.16.", text: "Büyük harfleri ve noktalama işaretlerini uygun yerlerde kullanır." },
+          { code: "T.3.4.17.", text: "Yazdıklarını düzenler (Yazım ve noktalama kuralları)." },
+          { code: "T.3.4.9.", text: "Kısa metinler yazar." },
+        ]
+      }
+    ]
+  },
   '4': {
     units: [
       {
